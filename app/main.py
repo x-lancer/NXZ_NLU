@@ -15,7 +15,7 @@ logger = setup_logger()
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="NLU服务 - 意图识别和标准化数据返回",
+    description="逆行者语义识别服务 - 自然语言理解服务，用于意图识别和标准化数据返回",
     docs_url="/docs",
     redoc_url="/redoc",
 )

@@ -1,0 +1,45 @@
+{
+  "domain": "电话",
+  "description": "电话相关规则",
+  "patterns": [
+    {
+      "pattern": "打(电话)?(给|到)(?P<target>.+)",
+      "intent": "phone",
+      "action": "call",
+      "target": null,
+      "confidence": 0.95,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "拨打(?P<target>\\d+)",
+      "intent": "phone",
+      "action": "call",
+      "target": null,
+      "confidence": 0.95,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(接听|挂断|拒接)(电话)?",
+      "intent": "phone",
+      "action": "control",
+      "target": null,
+      "confidence": 0.95
+    },
+    {
+      "pattern": "(查看|显示)(?P<target>通话记录|联系人|未接来电)",
+      "intent": "phone",
+      "action": "query",
+      "target": null,
+      "confidence": 0.90,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(回拨|重拨)",
+      "intent": "phone",
+      "action": "redial",
+      "target": null,
+      "confidence": 0.95
+    }
+  ]
+}
+

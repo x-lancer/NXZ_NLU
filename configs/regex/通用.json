@@ -1,0 +1,37 @@
+{
+  "domain": "通用",
+  "description": "通用查询规则",
+  "patterns": [
+    {
+      "pattern": "(查询|查看|显示|看看)(?P<target>天气|时间|日期|星期几|今天|明天)",
+      "intent": "general",
+      "action": "query",
+      "target": null,
+      "confidence": 0.85,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(现在|当前)(几点了|几点|时间)",
+      "intent": "general",
+      "action": "query",
+      "target": "time",
+      "confidence": 0.90
+    },
+    {
+      "pattern": "(今天|明天|后天)(是)?(星期几|周几)",
+      "intent": "general",
+      "action": "query",
+      "target": "weekday",
+      "confidence": 0.90
+    },
+    {
+      "pattern": "(查询|查看)(?P<target>油价|股票|新闻)",
+      "intent": "general",
+      "action": "query",
+      "target": null,
+      "confidence": 0.80,
+      "group_names": ["action", "target"]
+    }
+  ]
+}
+

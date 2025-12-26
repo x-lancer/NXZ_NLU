@@ -1,0 +1,38 @@
+{
+  "domain": "系统",
+  "description": "系统设置相关规则",
+  "patterns": [
+    {
+      "pattern": "(打开|关闭)(?P<target>蓝牙|WiFi|GPS|热点|飞行模式)",
+      "intent": "system",
+      "action": "toggle",
+      "target": null,
+      "confidence": 0.90,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(调整|设置)(?P<target>屏幕亮度|音量|字体大小)",
+      "intent": "system",
+      "action": "adjust",
+      "target": null,
+      "confidence": 0.85,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(查看|显示)(?P<target>系统版本|存储空间|电池电量|内存)",
+      "intent": "system",
+      "action": "query",
+      "target": null,
+      "confidence": 0.90,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(恢复出厂设置|重启|关机)",
+      "intent": "system",
+      "action": "control",
+      "target": null,
+      "confidence": 0.95
+    }
+  ]
+}
+

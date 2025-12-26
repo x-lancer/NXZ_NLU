@@ -1,0 +1,45 @@
+{
+  "domain": "音乐",
+  "description": "音乐播放相关规则",
+  "patterns": [
+    {
+      "pattern": "(播放|放)(?P<target>.+)(的)?(歌|音乐|歌曲)",
+      "intent": "music",
+      "action": "play",
+      "target": null,
+      "confidence": 0.90,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(下一首|上一首|暂停|继续|停止|播放)",
+      "intent": "music",
+      "action": "control",
+      "target": null,
+      "confidence": 0.95
+    },
+    {
+      "pattern": "(调大|调小|调高|调低)(?P<target>音量|声音)",
+      "intent": "music",
+      "action": "adjust",
+      "target": null,
+      "confidence": 0.90,
+      "group_names": ["action", "target"]
+    },
+    {
+      "pattern": "(随机播放|单曲循环|列表循环)",
+      "intent": "music",
+      "action": "mode",
+      "target": null,
+      "confidence": 0.95
+    },
+    {
+      "pattern": "(搜索|查找)(?P<target>.+)(的)?(歌|音乐)",
+      "intent": "music",
+      "action": "search",
+      "target": null,
+      "confidence": 0.85,
+      "group_names": ["action", "target"]
+    }
+  ]
+}
+
