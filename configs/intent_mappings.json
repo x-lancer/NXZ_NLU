@@ -1,0 +1,48 @@
+{
+  "intents": {
+    "vehicle_control": {
+      "description": "车辆控制意图",
+      "actions": ["open", "close", "adjust", "toggle"],
+      "targets": ["window", "door", "sunroof", "ac", "music", "navigation", "volume", "temperature"]
+    },
+    "vehicle_query": {
+      "description": "车辆查询意图",
+      "actions": ["query", "show", "display"],
+      "targets": ["weather", "traffic", "fuel", "battery", "mileage"]
+    },
+    "unknown": {
+      "description": "未知意图",
+      "actions": [],
+      "targets": []
+    }
+  },
+  "action_mappings": {
+    "打开": "open",
+    "开启": "open",
+    "启动": "open",
+    "关闭": "close",
+    "停止": "close",
+    "调高": "adjust",
+    "调低": "adjust",
+    "调整": "adjust",
+    "查询": "query",
+    "显示": "show",
+    "查看": "query"
+  },
+  "target_mappings": {
+    "车窗": "window",
+    "车门": "door",
+    "天窗": "sunroof",
+    "空调": "ac",
+    "音乐": "music",
+    "导航": "navigation",
+    "音量": "volume",
+    "温度": "temperature",
+    "天气": "weather",
+    "路况": "traffic",
+    "油量": "fuel",
+    "电量": "battery",
+    "里程": "mileage"
+  }
+}
+

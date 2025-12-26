@@ -1,0 +1,20 @@
+{
+  "model_name": "",
+  "model_type": "transformer",
+  "model_path": "./model_files",
+  "max_length": 128,
+  "batch_size": 1,
+  "device": "cpu",
+  "use_gpu": false,
+  "intent_labels": [
+    "vehicle_control",
+    "vehicle_query",
+    "unknown"
+  ],
+  "preprocessing": {
+    "lowercase": true,
+    "remove_punctuation": false,
+    "tokenization": "bert"
+  }
+}
+

@@ -1,0 +1,17 @@
+# Web框架
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# 模型相关（根据实际需要选择）
+# transformers>=4.35.0
+# torch>=2.1.0
+# onnxruntime>=1.16.0
+
+# 工具库
+python-dotenv>=1.0.0
+
+# HTTP客户端（用于测试）
+httpx>=0.25.0
+
