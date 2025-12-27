@@ -1,0 +1,241 @@
+{
+  "description": "可复用的正则词汇组定义",
+  "version": "1.0",
+  "groups": {
+    "action_open": {
+      "name": "打开动作",
+      "description": "表示打开、开启的动作词汇",
+      "items": ["打开", "开启", "启动", "开"]
+    },
+    "action_close": {
+      "name": "关闭动作",
+      "description": "表示关闭、停止的动作词汇",
+      "items": ["关闭", "停止", "关", "关上"]
+    },
+    "action_adjust": {
+      "name": "调整动作",
+      "description": "表示调整、设置的动作词汇",
+      "items": ["调高", "调低", "调整", "设置", "调节"]
+    },
+    "position_driver": {
+      "name": "主驾驶位置",
+      "description": "主驾驶相关的词汇",
+      "items": ["主驾驶", "主驾", "主驾驶位置", "驾驶位"]
+    },
+    "position_passenger": {
+      "name": "副驾驶位置",
+      "description": "副驾驶相关的词汇",
+      "items": ["副驾驶", "副驾", "副驾驶位置", "副驾驶座"]
+    },
+    "position_rear": {
+      "name": "后排位置",
+      "description": "后排相关的词汇",
+      "items": ["后", "后排", "后座", "后面"]
+    },
+    "position_all": {
+      "name": "所有位置",
+      "description": "所有位置词汇的集合（包含主驾、副驾、后排）",
+      "items": ["主驾驶", "主驾", "主驾驶位置", "驾驶位", "副驾驶", "副驾", "副驾驶位置", "副驾驶座", "后", "后排", "后座", "后面", "左", "右", "前"]
+    },
+    "target_window": {
+      "name": "车窗",
+      "description": "车窗相关的词汇",
+      "items": ["车窗", "车窗玻璃", "窗户玻璃", "窗户"]
+    },
+    "target_door": {
+      "name": "车门",
+      "description": "车门相关的词汇",
+      "items": ["车门", "门"]
+    },
+    "target_sunroof": {
+      "name": "天窗",
+      "description": "天窗相关的词汇",
+      "items": ["天窗", "顶窗"]
+    },
+    "target_ac": {
+      "name": "空调",
+      "description": "空调相关的词汇",
+      "items": ["空调", "冷气", "暖气"]
+    },
+    "target_music": {
+      "name": "音乐",
+      "description": "音乐相关的词汇",
+      "items": ["音乐", "音响", "音频"]
+    },
+    "target_navigation": {
+      "name": "导航",
+      "description": "导航相关的词汇",
+      "items": ["导航", "GPS", "地图"]
+    },
+    "target_all_vehicle": {
+      "name": "所有车辆控制目标",
+      "description": "车辆控制相关的所有目标词汇",
+      "items": ["车窗", "车窗玻璃", "窗户玻璃", "窗户", "车门", "门", "天窗", "顶窗", "空调", "冷气", "暖气", "音乐", "音响", "音频", "导航", "GPS", "地图", "后备箱", "大灯", "雨刷", "座椅"]
+    },
+    "query_action": {
+      "name": "查询动作",
+      "description": "查询、查看相关的动作词汇",
+      "items": ["查询", "查看", "显示", "看看", "搜索"]
+    },
+    "action_navigate": {
+      "name": "导航动作",
+      "description": "导航相关的动作词汇",
+      "items": ["导航", "去", "到", "前往", "去往"]
+    },
+    "action_navigate_prep": {
+      "name": "导航介词",
+      "description": "导航目标前的介词",
+      "items": ["到", "去", "去往", "前往"]
+    },
+    "action_play": {
+      "name": "播放动作",
+      "description": "播放相关的动作词汇",
+      "items": ["播放", "放", "播", "播送"]
+    },
+    "action_control_music": {
+      "name": "音乐控制动作",
+      "description": "音乐播放控制相关的动作",
+      "items": ["下一首", "上一首", "暂停", "继续", "停止", "播放"]
+    },
+    "action_control_nav": {
+      "name": "导航控制动作",
+      "description": "导航控制相关的动作",
+      "items": ["开始", "停止", "取消", "重新规划", "避开"]
+    },
+    "action_adjust_volume": {
+      "name": "音量调整动作",
+      "description": "音量调整相关的动作词汇",
+      "items": ["调大", "调小", "调高", "调低", "增大", "减小"]
+    },
+    "action_call": {
+      "name": "拨打动作",
+      "description": "打电话相关的动作词汇",
+      "items": ["打", "拨打", "拨", "打电话"]
+    },
+    "action_call_prep": {
+      "name": "拨打介词",
+      "description": "拨打目标前的介词",
+      "items": ["给", "到"]
+    },
+    "action_phone_control": {
+      "name": "电话控制动作",
+      "description": "电话控制相关的动作",
+      "items": ["接听", "挂断", "拒接", "回拨", "重拨"]
+    },
+    "action_toggle": {
+      "name": "开关动作",
+      "description": "开关相关的动作词汇",
+      "items": ["打开", "关闭", "开启", "关"]
+    },
+    "target_navigation_related": {
+      "name": "导航相关目标",
+      "description": "导航查询相关的目标",
+      "items": ["路线", "路况", "地图", "导航"]
+    },
+    "target_music_related": {
+      "name": "音乐相关目标",
+      "description": "音乐相关的目标词汇",
+      "items": ["歌", "音乐", "歌曲", "音频"]
+    },
+    "target_volume": {
+      "name": "音量",
+      "description": "音量相关的词汇",
+      "items": ["音量", "声音", "声量"]
+    },
+    "target_nav_avoid": {
+      "name": "导航避开目标",
+      "description": "导航中需要避开的项目",
+      "items": ["高速", "拥堵", "收费站", "红灯"]
+    },
+    "target_phone_query": {
+      "name": "电话查询目标",
+      "description": "电话查询相关的目标",
+      "items": ["通话记录", "联系人", "未接来电", "来电"]
+    },
+    "target_system_toggle": {
+      "name": "系统开关目标",
+      "description": "系统开关相关的目标",
+      "items": ["蓝牙", "WiFi", "GPS", "热点", "飞行模式", "网络"]
+    },
+    "target_system_adjust": {
+      "name": "系统调整目标",
+      "description": "系统调整相关的目标",
+      "items": ["屏幕亮度", "音量", "字体大小", "音量大小"]
+    },
+    "target_system_query": {
+      "name": "系统查询目标",
+      "description": "系统查询相关的目标",
+      "items": ["系统版本", "存储空间", "电池电量", "内存", "存储", "电量"]
+    },
+    "target_system_control": {
+      "name": "系统控制动作",
+      "description": "系统控制相关的动作",
+      "items": ["恢复出厂设置", "重启", "关机", "开机"]
+    },
+    "target_general_time": {
+      "name": "时间相关目标",
+      "description": "时间查询相关的目标",
+      "items": ["天气", "时间", "日期", "星期几", "今天", "明天", "周几"]
+    },
+    "target_general_query": {
+      "name": "通用查询目标",
+      "description": "通用查询相关的目标",
+      "items": ["油价", "股票", "新闻", "天气"]
+    },
+    "target_vehicle_adjust": {
+      "name": "车辆调整目标",
+      "description": "车辆调整相关的目标",
+      "items": ["音量", "温度", "亮度", "风速", "座椅"]
+    },
+    "target_vehicle_query": {
+      "name": "车辆查询目标",
+      "description": "车辆查询相关的目标",
+      "items": ["油量", "电量", "里程", "胎压", "温度"]
+    },
+    "music_mode": {
+      "name": "音乐播放模式",
+      "description": "音乐播放模式相关词汇",
+      "items": ["随机播放", "单曲循环", "列表循环", "顺序播放"]
+    },
+    "time_indicator": {
+      "name": "时间指示词",
+      "description": "时间相关的指示词",
+      "items": ["现在", "当前", "今天", "明天", "后天"]
+    },
+    "action_search": {
+      "name": "搜索动作",
+      "description": "搜索相关的动作词汇",
+      "items": ["搜索", "查找", "找", "搜"]
+    },
+    "action_nav_adjust": {
+      "name": "导航调整动作",
+      "description": "导航路线调整相关的动作",
+      "items": ["重新规划", "避开", "绕过"]
+    },
+    "target_vehicle_special": {
+      "name": "车辆特殊目标",
+      "description": "车辆特有的控制目标",
+      "items": ["后备箱", "大灯", "雨刷", "座", "座椅"]
+    }
+  },
+  "aliases": {
+    "打开": "action_open",
+    "关闭": "action_close",
+    "调整": "action_adjust",
+    "主驾": "position_driver",
+    "副驾": "position_passenger",
+    "后排": "position_rear",
+    "位置": "position_all",
+    "车窗": "target_window",
+    "车门": "target_door",
+    "天窗": "target_sunroof",
+    "空调": "target_ac",
+    "音乐": "target_music",
+    "导航": "target_navigation",
+    "查询": "query_action",
+    "播放": "action_play",
+    "导航到": "action_navigate_prep",
+    "打电话": "action_call"
+  }
+}
+

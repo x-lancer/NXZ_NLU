@@ -275,10 +275,35 @@ class DomainService:
             best_domain = max(similarities.items(), key=lambda x: x[1])
             domain_name, confidence = best_domain
             
-            # 如果置信度低于阈值，返回通用领域
-            if confidence < settings.SIMILARITY_THRESHOLD:
+            # 智能领域选择逻辑：
+            # 1. 如果最相似的领域是"通用"且置信度低于阈值，保持为"通用"
+            # 2. 如果最相似的领域不是"通用"：
+            #    - 如果相似度高于阈值，直接返回
+            #    - 如果相似度低于阈值，但明显高于"通用"领域的相似度，仍返回该领域
+            #    - 否则，考虑使用"通用"领域
+            general_similarity = similarities.get("通用", 0.0)
+            
+            if domain_name == "通用":
+                # 最相似的领域本身就是"通用"
+                logger.debug(f"Best match is '通用' (confidence: {confidence:.3f})")
+            elif confidence >= settings.SIMILARITY_THRESHOLD:
+                # 相似度高于阈值，直接返回最相似的领域
+                logger.debug(f"Domain '{domain_name}' confidence ({confidence:.3f}) above threshold")
+            elif confidence > general_similarity + 0.1:
+                # 最相似的领域虽然不是"通用"，且相似度低于阈值，但明显高于"通用"相似度（差值>0.1）
+                # 仍然返回最相似的领域
+                logger.info(
+                    f"Domain '{domain_name}' similarity ({confidence:.3f}) below threshold "
+                    f"({settings.SIMILARITY_THRESHOLD}), but higher than '通用' ({general_similarity:.3f}), using it"
+                )
+            else:
+                # 最相似的领域相似度不够高，且与"通用"接近，使用"通用"
                 domain_name = "通用"
-                confidence = max(similarities.values()) if similarities else 0.0
+                confidence = general_similarity
+                logger.info(
+                    f"Best domain '{best_domain[0]}' similarity ({best_domain[1]:.3f}) too low, "
+                    f"using default domain '通用' ({general_similarity:.3f})"
+                )
             
             logger.debug(f"Classified domain: {domain_name} (confidence: {confidence:.3f})")
             

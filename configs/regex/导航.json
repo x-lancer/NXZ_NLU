@@ -1,9 +1,9 @@
 {
   "domain": "导航",
-  "description": "导航相关规则",
+  "description": "导航相关规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "导航(到|去)(?P<target>.+)",
+      "pattern": "{{target_navigation}}{{action_navigate_prep}}(?P<target>.+)",
       "intent": "navigation",
       "action": "navigate",
       "target": null,
@@ -11,7 +11,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(去|到)(?P<target>.+)(去|走)",
+      "pattern": "{{action_navigate_prep}}(?P<target>.+)(去|走)",
       "intent": "navigation",
       "action": "navigate",
       "target": null,
@@ -19,7 +19,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(查看|显示|看看)(?P<target>路线|路况|地图|导航)",
+      "pattern": "{{query_action}}(?P<target>{{target_navigation_related}})",
       "intent": "navigation",
       "action": "query",
       "target": null,
@@ -27,14 +27,14 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(开始|停止|取消)(导航|路线)",
+      "pattern": "{{action_control_nav}}({{target_navigation}}|路线)",
       "intent": "navigation",
       "action": "control",
       "target": null,
       "confidence": 0.95
     },
     {
-      "pattern": "(重新规划|避开)(?P<target>高速|拥堵|收费站)",
+      "pattern": "{{action_nav_adjust}}(?P<target>{{target_nav_avoid}})",
       "intent": "navigation",
       "action": "adjust",
       "target": null,
@@ -43,4 +43,3 @@
     }
   ]
 }
-

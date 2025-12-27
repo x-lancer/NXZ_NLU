@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # 项目基本信息
     PROJECT_NAME: str = "NXZ NLU Service"
-    VERSION: str = "0.0.2"
+    VERSION: str = "0.0.3"
     API_V1_PREFIX: str = "/api/v1"
     
     # 服务器配置
@@ -70,6 +70,10 @@ class Settings(BaseSettings):
         default="./configs/regex",
         description="领域正则规则目录路径（按领域组织的规则文件）"
     )
+    VOCABULARY_GROUPS_PATH: str = Field(
+        default="./configs/vocabulary_groups.json",
+        description="词汇组配置文件路径（可复用的正则词汇组定义）"
+    )
     INTENT_CONFIG_PATH: str = Field(
         default="./configs/intent_mappings.json",
         description="意图映射配置文件路径"
@@ -80,13 +84,13 @@ class Settings(BaseSettings):
     )
     
     # NLU服务配置
-    REGEX_PRIORITY: bool = Field(
-        default=True,
-        description="是否优先使用正则匹配"
-    )
     CONFIDENCE_THRESHOLD: float = Field(
         default=0.5,
-        description="模型置信度阈值"
+        description="意图识别置信度阈值（正则和模型都使用）"
+    )
+    PARALLEL_EXECUTION: bool = Field(
+        default=True,
+        description="是否启用并行执行（三层并行架构）"
     )
     
     # 日志配置

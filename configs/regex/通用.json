@@ -1,9 +1,9 @@
 {
   "domain": "通用",
-  "description": "通用查询规则",
+  "description": "通用查询规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "(查询|查看|显示|看看)(?P<target>天气|时间|日期|星期几|今天|明天)",
+      "pattern": "{{query_action}}(?P<target>{{target_general_time}})",
       "intent": "general",
       "action": "query",
       "target": null,
@@ -11,7 +11,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(现在|当前)(几点了|几点|时间)",
+      "pattern": "({{time_indicator}})(几点了|几点|时间)",
       "intent": "general",
       "action": "query",
       "target": "time",
@@ -25,7 +25,7 @@
       "confidence": 0.90
     },
     {
-      "pattern": "(查询|查看)(?P<target>油价|股票|新闻)",
+      "pattern": "{{query_action}}(?P<target>{{target_general_query}})",
       "intent": "general",
       "action": "query",
       "target": null,
@@ -34,4 +34,3 @@
     }
   ]
 }
-

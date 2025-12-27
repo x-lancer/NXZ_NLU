@@ -1,0 +1,23 @@
+{
+  "intent_examples": {
+    "vehicle_control": {
+      "description": "车辆控制意图",
+      "examples": [
+        "打开车窗",
+        "开启车门",
+        "关闭天窗",
+        "停止空调",
+        "启动音乐"
+      ]
+    },
+    "vehicle_query": {
+      "description": "车辆查询意图",
+      "examples": [
+        "查询天气",
+        "查看路况",
+        "显示油量",
+        "查看电量"
+      ]
+    }
+  }
+}

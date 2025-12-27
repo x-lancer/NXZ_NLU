@@ -1,7 +1,7 @@
 """
 正则匹配服务
 负责加载正则表达式规则并进行匹配
-支持按领域组织的规则文件
+支持按领域组织的规则文件和可复用的词汇组
 """
 import json
 import re
@@ -9,6 +9,7 @@ from typing import Optional, Dict, Any, List
 from pathlib import Path
 from app.core.config import settings
 from app.utils.logger import get_logger
+from app.services.vocabulary_manager import VocabularyManager
 
 logger = get_logger(__name__)
 
@@ -30,6 +31,7 @@ class RegexService:
     def __init__(self):
         self.domain_patterns: Dict[str, List[Dict[str, Any]]] = {}  # 按领域组织的规则
         self.common_patterns: List[Dict[str, Any]] = []  # 通用规则（向后兼容）
+        self.vocab_manager: Optional[VocabularyManager] = None  # 词汇组管理器
         self._loaded = False
     
     def load_patterns(self):
@@ -38,6 +40,15 @@ class RegexService:
             return
         
         logger.info("Loading regex patterns...")
+        
+        # 0. 加载词汇组管理器（必须在加载模式之前）
+        try:
+            self.vocab_manager = VocabularyManager()
+            self.vocab_manager.load_vocabularies()
+            logger.info("Vocabulary manager loaded successfully")
+        except Exception as e:
+            logger.warning(f"Failed to load vocabulary manager: {e}, continuing without vocabulary groups")
+            self.vocab_manager = None
         
         # 1. 加载领域特定的规则文件
         self._load_domain_patterns()
@@ -74,8 +85,10 @@ class RegexService:
                         patterns = config.get("patterns", [])
                         
                         if patterns:
-                            self.domain_patterns[domain] = patterns
-                            logger.debug(f"Loaded {len(patterns)} patterns for domain: {domain}")
+                            # 展开词汇组引用
+                            expanded_patterns = self._expand_patterns(patterns)
+                            self.domain_patterns[domain] = expanded_patterns
+                            logger.debug(f"Loaded {len(expanded_patterns)} patterns for domain: {domain}")
                 except Exception as e:
                     logger.error(f"Failed to load regex patterns for domain '{domain}': {e}")
                     continue
@@ -93,12 +106,47 @@ class RegexService:
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-                self.common_patterns = config.get("patterns", [])
+                patterns = config.get("patterns", [])
                 
-                if self.common_patterns:
+                if patterns:
+                    # 展开词汇组引用
+                    self.common_patterns = self._expand_patterns(patterns)
                     logger.info(f"Loaded {len(self.common_patterns)} common patterns from {config_path}")
         except Exception as e:
             logger.warning(f"Failed to load common regex patterns: {e}")
+    
+    def _expand_patterns(self, patterns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        展开模式中的词汇组引用
+        
+        Args:
+            patterns: 原始模式配置列表
+            
+        Returns:
+            展开后的模式配置列表
+        """
+        if not self.vocab_manager:
+            # 如果没有词汇组管理器，直接返回原始模式（向后兼容）
+            return patterns
+        
+        expanded = []
+        for pattern_config in patterns:
+            expanded_config = pattern_config.copy()
+            original_pattern = pattern_config.get("pattern", "")
+            
+            if original_pattern:
+                # 展开词汇组引用
+                expanded_pattern = self.vocab_manager.expand_pattern(original_pattern)
+                expanded_config["pattern"] = expanded_pattern
+                
+                # 记录原始模式（用于调试）
+                if expanded_pattern != original_pattern:
+                    expanded_config["_original_pattern"] = original_pattern
+                    logger.debug(f"Expanded pattern: {original_pattern} -> {expanded_pattern}")
+            
+            expanded.append(expanded_config)
+        
+        return expanded
     
     def match(
         self, 
@@ -110,38 +158,52 @@ class RegexService:
         
         Args:
             text: 待匹配的文本
-            domain: 可选的领域（如果提供，优先匹配该领域的规则）
+            domain: 可选的领域
+                - None: 全领域匹配（匹配所有领域的规则）
+                - 指定领域: 只匹配该领域的规则
         
         Returns:
-            Dict包含intent, action, target, entities等字段，如果未匹配返回None
+            Dict包含intent, action, target, entities, domain等字段，如果未匹配返回None
         """
         if not self._loaded:
             logger.warning("Regex patterns not loaded, cannot match")
             return None
         
-        # 策略1: 如果指定了领域，优先匹配该领域的规则
-        if domain and domain in self.domain_patterns:
+        # 策略1: 全领域匹配（domain=None）
+        if domain is None:
+            # 先尝试通用规则
+            if self.common_patterns:
+                result = self._match_patterns(text, self.common_patterns)
+                if result:
+                    result["domain"] = "通用"  # 通用规则属于通用领域
+                    logger.debug(f"Matched common pattern")
+                    return result
+            
+            # 遍历所有领域的规则
+            for domain_name, patterns in self.domain_patterns.items():
+                result = self._match_patterns(text, patterns)
+                if result:
+                    result["domain"] = domain_name  # 记录匹配到的领域
+                    logger.debug(f"Matched pattern in domain '{domain_name}' (global match)")
+                    return result
+            
+            return None
+        
+        # 策略2: 指定领域匹配
+        if domain in self.domain_patterns:
             result = self._match_patterns(text, self.domain_patterns[domain])
             if result:
+                result["domain"] = domain  # 记录领域
                 logger.debug(f"Matched pattern in domain '{domain}'")
                 return result
         
-        # 策略2: 匹配通用规则
+        # 如果指定领域匹配失败，尝试通用规则（兜底）
         if self.common_patterns:
             result = self._match_patterns(text, self.common_patterns)
             if result:
-                logger.debug(f"Matched common pattern")
+                result["domain"] = "通用"
+                logger.debug(f"Matched common pattern (fallback)")
                 return result
-        
-        # 策略3: 如果未指定领域或领域匹配失败，尝试匹配所有领域的规则
-        if not domain or domain not in self.domain_patterns:
-            for domain_name, patterns in self.domain_patterns.items():
-                if domain_name == domain:  # 已尝试过，跳过
-                    continue
-                result = self._match_patterns(text, patterns)
-                if result:
-                    logger.debug(f"Matched pattern in domain '{domain_name}'")
-                    return result
         
         return None
     
@@ -150,17 +212,27 @@ class RegexService:
         text: str, 
         patterns: List[Dict[str, Any]]
     ) -> Optional[Dict[str, Any]]:
-        """在给定的规则列表中匹配文本"""
+        """
+        在给定的规则列表中匹配文本
+        
+        Args:
+            text: 待匹配的文本
+            patterns: 规则列表
+        
+        Returns:
+            匹配结果，包含intent, action, target, entities等字段
+        """
         for pattern_config in patterns:
             pattern = pattern_config.get("pattern")
             if not pattern:
                 continue
             
             try:
+                # 编译正则表达式以提高性能（可以考虑缓存）
                 match = re.search(pattern, text)
                 if match:
                     result = self._extract_result(pattern_config, match, text)
-                    logger.debug(f"Regex matched: {pattern} -> {result}")
+                    logger.debug(f"Regex matched: {pattern[:50]}... -> intent={result.get('intent')}")
                     return result
             except re.error as e:
                 logger.error(f"Invalid regex pattern '{pattern}': {e}")
@@ -174,7 +246,17 @@ class RegexService:
         match: re.Match,
         text: str
     ) -> Dict[str, Any]:
-        """从匹配结果中提取结构化信息"""
+        """
+        从匹配结果中提取结构化信息
+        
+        Args:
+            pattern_config: 规则配置
+            match: 正则匹配对象
+            text: 原始文本
+        
+        Returns:
+            包含intent, action, target, confidence, entities, raw_text等字段的字典
+        """
         # 获取基础配置
         intent = pattern_config.get("intent", "unknown")
         action = pattern_config.get("action")
@@ -205,7 +287,8 @@ class RegexService:
             "action": action,
             "target": target,
             "confidence": confidence,
-            "entities": entities if entities else None
+            "entities": entities if entities else None,
+            "raw_text": text  # 添加原始文本
         }
     
     def _create_default_domain_configs(self, domain_dir: Path):

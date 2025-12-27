@@ -1,0 +1,28 @@
+{
+  "domain": "导航",
+  "description": "导航相关规则",
+  "patterns": [
+    {
+      "pattern": "导航(到|去)(?P<target>.+)",
+      "intent": "navigation",
+      "action": "navigate",
+      "target": null,
+      "confidence": 0.95,
+      "group_names": [
+        "action",
+        "target"
+      ]
+    },
+    {
+      "pattern": "(查看|显示)(?P<target>路线|路况|地图)",
+      "intent": "navigation",
+      "action": "query",
+      "target": null,
+      "confidence": 0.9,
+      "group_names": [
+        "action",
+        "target"
+      ]
+    }
+  ]
+}

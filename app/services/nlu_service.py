@@ -1,7 +1,8 @@
 """
 NLU核心服务
-编排领域划分、模型预测和正则匹配，实现两阶段意图识别
+编排领域划分、模型预测和正则匹配，实现三层并行意图识别
 """
+import asyncio
 from typing import Optional, Dict, Any
 from app.core.schemas import IntentData, DomainData
 from app.core.config import settings
@@ -110,11 +111,16 @@ class NLUService:
         session_id: Optional[str] = None
     ) -> IntentData:
         """
-        识别意图（两阶段流程：先领域划分，再意图识别）
+        识别意图（三层并行架构）
+        
+        并行路径：
+        1. 全局正则匹配（最快路径）
+        2. 领域划分 → 特定域正则（中等路径）
+        3. 领域划分 → 模型预测（兜底路径）
         
         Args:
             text: 待识别的文本
-            domain: 可选的领域（如果提供则跳过领域划分）
+            domain: 可选的领域（如果提供则跳过领域划分，直接进入意图识别）
             context: 上下文信息
             session_id: 会话ID
         
@@ -126,72 +132,316 @@ class NLUService:
         
         logger.info(f"Recognizing intent for text: {text}")
         
-        # 阶段1: 领域划分（如果未提供领域）
-        detected_domain = domain
-        if not detected_domain and self.domain_service:
-            domain_result = await self.domain_service.classify_domain(text, context)
-            if domain_result:
-                detected_domain = domain_result.get("domain", "通用")
-                logger.info(f"Detected domain: {detected_domain}")
-        elif not detected_domain:
-            detected_domain = "通用"
-            logger.info(f"Using default domain: {detected_domain}")
+        # 如果已提供领域，直接进入意图识别阶段（并行执行特定域正则和模型预测）
+        if domain:
+            return await self._recognize_intent_with_domain(text, domain, context)
         
-        # 策略1: 如果启用了正则优先，先尝试正则匹配（在指定领域下）
-        if settings.REGEX_PRIORITY and self.regex_service:
-            regex_result = self.regex_service.match(text, domain=detected_domain)
-            if regex_result and regex_result.get("confidence", 0) >= settings.CONFIDENCE_THRESHOLD:
-                logger.info(f"Regex match found: {regex_result}")
-                return IntentData(
-                    intent=regex_result.get("intent", "unknown"),
-                    domain=detected_domain,
-                    action=regex_result.get("action"),
-                    target=regex_result.get("target"),
-                    confidence=regex_result.get("confidence", 0.0),
-                    entities=regex_result.get("entities"),
-                    raw_text=text,
-                    method="regex"
-                )
+        # 第一层并行：全局正则 + 领域划分
+        return await self._recognize_parallel(text, context)
+    
+    async def _recognize_parallel(
+        self,
+        text: str,
+        context: Optional[Dict[str, Any]] = None
+    ) -> IntentData:
+        """
+        并行识别意图（三层并行架构的核心逻辑）
+        """
+        # 创建第一层并行任务
+        global_regex_task = None
+        domain_task = None
         
-        # 策略2: 使用模型预测（在指定领域下）
-        if self.model_service:
-            model_result = await self.model_service.predict(text, domain=detected_domain, context=context)
-            if model_result and model_result.get("confidence", 0) >= settings.CONFIDENCE_THRESHOLD:
-                logger.info(f"Model prediction: {model_result}")
-                return IntentData(
-                    intent=model_result.get("intent", "unknown"),
-                    domain=detected_domain,
-                    action=model_result.get("action"),
-                    target=model_result.get("target"),
-                    confidence=model_result.get("confidence", 0.0),
-                    entities=model_result.get("entities"),
-                    raw_text=text,
-                    method="model"
-                )
+        if self.regex_service:
+            global_regex_task = asyncio.create_task(
+                asyncio.to_thread(self.regex_service.match, text, domain=None)
+            )
         
-        # 策略3: 如果正则未启用优先，但模型失败，再尝试正则（在指定领域下）
-        if not settings.REGEX_PRIORITY and self.regex_service:
-            regex_result = self.regex_service.match(text, domain=detected_domain)
-            if regex_result:
-                logger.info(f"Fallback regex match: {regex_result}")
-                return IntentData(
-                    intent=regex_result.get("intent", "unknown"),
-                    domain=detected_domain,
-                    action=regex_result.get("action"),
-                    target=regex_result.get("target"),
-                    confidence=regex_result.get("confidence", 0.0),
-                    entities=regex_result.get("entities"),
-                    raw_text=text,
-                    method="regex"
+        if self.domain_service:
+            domain_task = asyncio.create_task(
+                self.domain_service.classify_domain(text, context)
+            )
+        
+        # 等待第一层第一个完成
+        tasks = []
+        if global_regex_task:
+            tasks.append(global_regex_task)
+        if domain_task:
+            tasks.append(domain_task)
+        
+        if not tasks:
+            # 没有可用的服务
+            return IntentData(
+                intent="unknown",
+                domain="通用",
+                confidence=0.0,
+                raw_text=text,
+                method="none"
+            )
+        
+        done, pending = await asyncio.wait(
+            tasks,
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        
+        # 检查全局正则是否完成
+        if global_regex_task and global_regex_task in done:
+            try:
+                regex_result = await global_regex_task
+                if regex_result and regex_result.get("confidence", 0) >= settings.CONFIDENCE_THRESHOLD:
+                    logger.info(
+                        f"Global regex match found: intent={regex_result.get('intent')}, "
+                        f"domain={regex_result.get('domain')}, confidence={regex_result.get('confidence'):.3f}"
+                    )
+                    # 取消领域划分任务（节省资源）
+                    if domain_task and domain_task not in done:
+                        domain_task.cancel()
+                        try:
+                            await domain_task  # 等待取消完成
+                        except asyncio.CancelledError:
+                            pass
+                    
+                    return self._build_intent_data(
+                        regex_result,
+                        domain=regex_result.get("domain", "通用"),
+                        method="regex_global",
+                        raw_text=text
+                    )
+            except Exception as e:
+                logger.error(f"Global regex task failed: {e}", exc_info=True)
+        
+        # 检查领域划分是否完成
+        if domain_task and domain_task in done:
+            try:
+                domain_result = await domain_task
+                detected_domain = "通用"
+                if domain_result:
+                    detected_domain = domain_result.get("domain", "通用")
+                    logger.info(f"Domain classified: {detected_domain}")
+                
+                # 第二层并行：特定域正则 + 模型预测
+                return await self._recognize_intent_parallel(
+                    text, detected_domain, context
                 )
+            except Exception as e:
+                logger.error(f"Domain classification task failed: {e}")
+                detected_domain = "通用"
+                # 即使失败，也继续尝试意图识别
+                return await self._recognize_intent_parallel(text, detected_domain, context)
+        
+        # 如果都还没完成（理论上不应该发生），等待全部完成
+        if pending:
+            await asyncio.wait(pending)
+            # 再次尝试处理
+            if global_regex_task and global_regex_task.done():
+                regex_result = global_regex_task.result()
+                if regex_result and regex_result.get("confidence", 0) >= settings.CONFIDENCE_THRESHOLD:
+                    return self._build_intent_data(
+                        regex_result,
+                        domain=regex_result.get("domain", "通用"),
+                        method="regex_global",
+                        raw_text=text
+                    )
+            
+            if domain_task and domain_task.done():
+                domain_result = domain_task.result()
+                detected_domain = domain_result.get("domain", "通用") if domain_result else "通用"
+                return await self._recognize_intent_parallel(text, detected_domain, context)
         
         # 默认返回未知意图
         logger.warning(f"No valid intent found for text: {text}")
         return IntentData(
             intent="unknown",
-            domain=detected_domain,
+            domain="通用",
             confidence=0.0,
             raw_text=text,
             method="none"
+        )
+    
+    async def _recognize_intent_parallel(
+        self,
+        text: str,
+        domain: str,
+        context: Optional[Dict[str, Any]] = None
+    ) -> IntentData:
+        """
+        第二层并行：特定域正则 + 模型预测
+        
+        Args:
+            text: 待识别的文本
+            domain: 已识别的领域
+            context: 上下文信息
+        
+        Returns:
+            IntentData: 意图识别结果
+        """
+        # 创建第二层并行任务
+        domain_regex_task = None
+        model_task = None
+        
+        if self.regex_service:
+            domain_regex_task = asyncio.create_task(
+                asyncio.to_thread(self.regex_service.match, text, domain=domain)
+            )
+        
+        if self.model_service:
+            model_task = asyncio.create_task(
+                self.model_service.predict(text, domain=domain, context=context)
+            )
+        
+        tasks = []
+        if domain_regex_task:
+            tasks.append(domain_regex_task)
+        if model_task:
+            tasks.append(model_task)
+        
+        if not tasks:
+            # 没有可用的服务
+            return IntentData(
+                intent="unknown",
+                domain=domain,
+                confidence=0.0,
+                raw_text=text,
+                method="none"
+            )
+        
+        # 等待第二层第一个完成
+        done, pending = await asyncio.wait(
+            tasks,
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        
+        # 检查特定域正则是否完成
+        if domain_regex_task and domain_regex_task in done:
+            try:
+                regex_result = await domain_regex_task
+                if regex_result and regex_result.get("confidence", 0) >= settings.CONFIDENCE_THRESHOLD:
+                    logger.info(
+                        f"Domain-specific regex match found: intent={regex_result.get('intent')}, "
+                        f"domain={domain}, confidence={regex_result.get('confidence'):.3f}"
+                    )
+                    # 取消模型预测任务（节省资源）
+                    if model_task and model_task not in done:
+                        model_task.cancel()
+                        try:
+                            await model_task  # 等待取消完成
+                        except asyncio.CancelledError:
+                            pass
+                    
+                    return self._build_intent_data(
+                        regex_result,
+                        domain=domain,
+                        method="regex_domain_specific",
+                        raw_text=text
+                    )
+            except Exception as e:
+                logger.error(f"Domain regex task failed: {e}", exc_info=True)
+        
+        # 检查模型预测是否完成
+        if model_task and model_task in done:
+            try:
+                model_result = await model_task
+                if model_result and model_result.get("confidence", 0) >= settings.CONFIDENCE_THRESHOLD:
+                    logger.info(
+                        f"Model prediction: intent={model_result.get('intent')}, "
+                        f"domain={domain}, confidence={model_result.get('confidence'):.3f}"
+                    )
+                    # 取消特定域正则任务（节省资源）
+                    if domain_regex_task and domain_regex_task not in done:
+                        domain_regex_task.cancel()
+                        try:
+                            await domain_regex_task  # 等待取消完成
+                        except asyncio.CancelledError:
+                            pass
+                    
+                    return self._build_intent_data(
+                        model_result,
+                        domain=domain,
+                        method="model",
+                        raw_text=text
+                    )
+            except Exception as e:
+                logger.error(f"Model prediction task failed: {e}", exc_info=True)
+        
+        # 如果都失败，等待另一个完成（用于日志记录）
+        if pending:
+            await asyncio.wait(pending)
+            # 再次检查是否有结果（可能置信度较低）
+            if domain_regex_task and domain_regex_task.done():
+                regex_result = domain_regex_task.result()
+                if regex_result:
+                    logger.debug(f"Domain regex matched but confidence too low: {regex_result.get('confidence', 0)}")
+                    return self._build_intent_data(
+                        regex_result,
+                        domain=domain,
+                        method="regex_domain_specific",
+                        raw_text=text
+                    )
+            
+            if model_task and model_task.done():
+                model_result = model_task.result()
+                if model_result:
+                    logger.debug(f"Model predicted but confidence too low: {model_result.get('confidence', 0)}")
+                    return self._build_intent_data(
+                        model_result,
+                        domain=domain,
+                        method="model",
+                        raw_text=text
+                    )
+        
+        # 默认返回未知意图
+        logger.warning(f"No valid intent found for text: {text} in domain: {domain}")
+        return IntentData(
+            intent="unknown",
+            domain=domain,
+            confidence=0.0,
+            raw_text=text,
+            method="none"
+        )
+    
+    async def _recognize_intent_with_domain(
+        self,
+        text: str,
+        domain: str,
+        context: Optional[Dict[str, Any]] = None
+    ) -> IntentData:
+        """
+        在已知领域的情况下识别意图（第二层并行）
+        
+        Args:
+            text: 待识别的文本
+            domain: 已知的领域
+            context: 上下文信息
+        
+        Returns:
+            IntentData: 意图识别结果
+        """
+        return await self._recognize_intent_parallel(text, domain, context)
+    
+    def _build_intent_data(
+        self,
+        result: Dict[str, Any],
+        domain: Optional[str] = None,
+        method: str = "unknown"
+    ) -> IntentData:
+        """
+        构建IntentData对象
+        
+        Args:
+            result: 匹配/预测结果字典
+            domain: 领域（如果result中没有）
+            method: 识别方法
+        
+        Returns:
+            IntentData: 意图识别结果
+        """
+        return IntentData(
+            intent=result.get("intent", "unknown"),
+            domain=result.get("domain") or domain or "通用",
+            action=result.get("action"),
+            target=result.get("target"),
+            confidence=result.get("confidence", 0.0),
+            entities=result.get("entities"),
+            raw_text=result.get("raw_text", ""),
+            method=method
         )
 

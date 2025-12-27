@@ -1,9 +1,9 @@
 {
   "domain": "音乐",
-  "description": "音乐播放相关规则",
+  "description": "音乐播放相关规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "(播放|放)(?P<target>.+)(的)?(歌|音乐|歌曲)",
+      "pattern": "{{action_play}}(?P<target>.+)(的)?({{target_music_related}})",
       "intent": "music",
       "action": "play",
       "target": null,
@@ -11,14 +11,14 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(下一首|上一首|暂停|继续|停止|播放)",
+      "pattern": "{{action_control_music}}",
       "intent": "music",
       "action": "control",
       "target": null,
       "confidence": 0.95
     },
     {
-      "pattern": "(调大|调小|调高|调低)(?P<target>音量|声音)",
+      "pattern": "{{action_adjust_volume}}(?P<target>{{target_volume}})",
       "intent": "music",
       "action": "adjust",
       "target": null,
@@ -26,14 +26,14 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(随机播放|单曲循环|列表循环)",
+      "pattern": "{{music_mode}}",
       "intent": "music",
       "action": "mode",
       "target": null,
       "confidence": 0.95
     },
     {
-      "pattern": "(搜索|查找)(?P<target>.+)(的)?(歌|音乐)",
+      "pattern": "{{action_search}}(?P<target>.+)(的)?({{target_music_related}})",
       "intent": "music",
       "action": "search",
       "target": null,
@@ -42,4 +42,3 @@
     }
   ]
 }
-

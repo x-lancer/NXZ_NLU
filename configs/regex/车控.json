@@ -1,9 +1,9 @@
 {
   "domain": "车控",
-  "description": "车辆控制相关规则",
+  "description": "车辆控制相关规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "(打开|开启|启动)(?P<target>车窗|车门|天窗|空调|音乐|导航|后备箱|大灯|雨刷)",
+      "pattern": "{{action_open}}(?P<target>(?:{{position_all}})?(?:{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}}))",
       "intent": "vehicle_control",
       "action": "open",
       "target": null,
@@ -11,7 +11,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(关闭|停止)(?P<target>车窗|车门|天窗|空调|音乐|导航|后备箱|大灯|雨刷)",
+      "pattern": "{{action_close}}(?P<target>(?:{{position_all}})?(?:{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}}))",
       "intent": "vehicle_control",
       "action": "close",
       "target": null,
@@ -19,7 +19,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(调高|调低|调整|设置)(?P<target>音量|温度|亮度|风速|座椅)",
+      "pattern": "{{action_adjust}}(?P<target>{{target_vehicle_adjust}})",
       "intent": "vehicle_control",
       "action": "adjust",
       "target": null,
@@ -27,7 +27,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(查询|查看|显示)(?P<target>油量|电量|里程|胎压|温度)",
+      "pattern": "{{query_action}}(?P<target>{{target_vehicle_query}})",
       "intent": "vehicle_query",
       "action": "query",
       "target": null,

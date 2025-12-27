@@ -1,0 +1,24 @@
+{
+  "domain": "音乐",
+  "description": "音乐播放相关规则",
+  "patterns": [
+    {
+      "pattern": "(播放|放)(?P<target>.+)(的)?(歌|音乐)",
+      "intent": "music",
+      "action": "play",
+      "target": null,
+      "confidence": 0.9,
+      "group_names": [
+        "action",
+        "target"
+      ]
+    },
+    {
+      "pattern": "(下一首|上一首|暂停|继续|停止)",
+      "intent": "music",
+      "action": "control",
+      "target": null,
+      "confidence": 0.95
+    }
+  ]
+}

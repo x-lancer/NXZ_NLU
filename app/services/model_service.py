@@ -238,6 +238,7 @@ class ModelService:
                 "intent": intent_name,
                 "confidence": float(confidence),
                 "entities": entities,
+                "raw_text": text,  # 添加原始文本
                 "similarities": {k: float(v) for k, v in similarities.items()}  # 用于调试
             }
             

@@ -1,0 +1,17 @@
+{
+  "domain": "通用",
+  "description": "通用查询规则",
+  "patterns": [
+    {
+      "pattern": "(查询|查看|显示)(?P<target>天气|时间|日期)",
+      "intent": "general",
+      "action": "query",
+      "target": null,
+      "confidence": 0.85,
+      "group_names": [
+        "action",
+        "target"
+      ]
+    }
+  ]
+}

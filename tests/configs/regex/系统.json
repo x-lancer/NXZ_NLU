@@ -1,0 +1,17 @@
+{
+  "domain": "系统",
+  "description": "系统设置相关规则",
+  "patterns": [
+    {
+      "pattern": "(打开|关闭)(?P<target>蓝牙|WiFi|GPS|热点)",
+      "intent": "system",
+      "action": "toggle",
+      "target": null,
+      "confidence": 0.9,
+      "group_names": [
+        "action",
+        "target"
+      ]
+    }
+  ]
+}

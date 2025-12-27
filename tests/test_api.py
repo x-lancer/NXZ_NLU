@@ -2,8 +2,13 @@
 API测试
 """
 import pytest
+import requests
 from fastapi.testclient import TestClient
 from app.main import app
+from app.api.dependencies import initialize_nlu_service
+
+# 初始化NLU服务（在模块级别）
+initialize_nlu_service()
 
 client = TestClient(app)
 
@@ -33,3 +38,11 @@ def test_intent_recognition():
     assert data["success"] is True
     assert "data" in data
 
+
+def demo():
+    resp = requests.get("http://localhost:8000/")
+    print(resp)
+
+
+if __name__ == '__main__':
+    demo()
