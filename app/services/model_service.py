@@ -12,6 +12,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from app.core.config import settings
 from app.utils.logger import get_logger
+from app.services.vocabulary_manager import VocabularyManager
 
 logger = get_logger(__name__)
 
@@ -23,6 +24,7 @@ class ModelService:
         self.model: Optional[SentenceTransformer] = None
         self.intent_examples: Dict[str, Dict[str, List[str]]] = {}  # {domain: {intent: [examples]}}
         self.intent_embeddings: Dict[str, Dict[str, np.ndarray]] = {}  # {domain: {intent: embedding}}
+        self.vocab_manager: Optional[VocabularyManager] = None  # 词汇组管理器（用于实体提取和alias映射）
         self._embedding_cache: Dict[str, np.ndarray] = {}  # 文本嵌入缓存
         self._prediction_cache: Dict[str, Dict[str, Any]] = {}  # 预测结果缓存
         self._cache_size_limit = 1000  # 缓存大小限制
@@ -47,6 +49,15 @@ class ModelService:
                 self.model = SentenceTransformer(model_name, device=settings.MODEL_DEVICE)
             
             logger.info(f"Model loaded successfully on device: {settings.MODEL_DEVICE}")
+            
+            # 加载词汇组管理器（用于实体提取和alias映射）
+            try:
+                self.vocab_manager = VocabularyManager()
+                self.vocab_manager.load_vocabularies()
+                logger.info("Vocabulary manager loaded for model service")
+            except Exception as e:
+                logger.warning(f"Failed to load vocabulary manager: {e}, entity extraction may be limited")
+                self.vocab_manager = None
             
             # 加载意图示例
             self._load_intent_examples()
@@ -231,21 +242,48 @@ class ModelService:
             
             logger.debug(f"Predicted intent: {intent_name} (confidence: {confidence:.3f})")
             
-            # 提取实体（action 和 target）
+            # 提取实体（action, target, position, value）
             entities = self._extract_entities(text, intent_name)
+            
+            # 构建semantic对象（与正则匹配保持一致的结构）
+            semantic = None
+            if entities:
+                # 从entities中获取中文原始文本，然后映射为alias
+                action_text = entities.get("action")
+                target_text = entities.get("target")
+                position_text = entities.get("position")
+                value_text = entities.get("value")
+                
+                # 将中文文本映射为alias（用于semantic字段）
+                action = None
+                target = None
+                position = None
+                value = value_text  # value通常不需要映射
+                
+                if action_text and self.vocab_manager:
+                    action = self.vocab_manager.get_alias_by_item(action_text)
+                if target_text and self.vocab_manager:
+                    target = self.vocab_manager.get_alias_by_item(target_text)
+                if position_text and self.vocab_manager:
+                    position = self.vocab_manager.get_alias_by_item(position_text)
+                
+                # 只有当至少有一个字段有值时才创建semantic对象
+                if action or target or position or value:
+                    semantic = {
+                        "action": action,
+                        "target": target,
+                        "position": position,
+                        "value": value
+                    }
             
             result = {
                 "intent": intent_name,
+                "semantic": semantic,
                 "confidence": float(confidence),
                 "entities": entities,
                 "raw_text": text,  # 添加原始文本
                 "similarities": {k: float(v) for k, v in similarities.items()}  # 用于调试
             }
-            
-            # 如果提取到了 action 和 target，添加到结果中
-            if entities:
-                result["action"] = entities.get("action")
-                result["target"] = entities.get("target")
             
             # 缓存结果（限制缓存大小）
             if len(self._prediction_cache) < self._cache_size_limit:
@@ -259,36 +297,57 @@ class ModelService:
     
     def _extract_entities(self, text: str, intent: str) -> Dict[str, Any]:
         """
-        从文本中提取实体（action 和 target）
+        从文本中提取实体（action, target, position, value）
         
-        这里使用简单的关键词匹配，也可以使用更复杂的NER模型
+        使用vocabulary_groups.json中的词汇组进行匹配，并使用alias机制统一输出格式
+        与正则匹配的实体提取逻辑保持一致
         """
         entities = {}
         
-        # 加载意图映射配置
-        try:
-            intent_config_path = Path(settings.INTENT_CONFIG_PATH)
-            if intent_config_path.exists():
-                with open(intent_config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                    action_mappings = config.get("action_mappings", {})
-                    target_mappings = config.get("target_mappings", {})
-                    
-                    # 匹配 action
-                    for chinese_action, english_action in action_mappings.items():
-                        if chinese_action in text:
-                            entities["action"] = english_action
-                            entities["action_text"] = chinese_action
-                            break
-                    
-                    # 匹配 target
-                    for chinese_target, english_target in target_mappings.items():
-                        if chinese_target in text:
-                            entities["target"] = english_target
-                            entities["target_text"] = chinese_target
-                            break
-        except Exception as e:
-            logger.debug(f"Failed to extract entities: {e}")
+        if not self.vocab_manager:
+            logger.debug("Vocabulary manager not available, cannot extract entities")
+            return None
+        
+        # 定义需要提取的实体类型及其对应的词汇组前缀
+        entity_types = {
+            "action": ["action_"],
+            "target": ["target_"],
+            "position": ["position_"],
+            "value": []  # value通常不是从词汇组中提取，而是从文本中直接提取数值等
+        }
+        
+        # 遍历所有词汇组，匹配文本中的实体
+        for group_id, group_data in self.vocab_manager.groups.items():
+            items = group_data.get("items", [])
+            alias = group_data.get("alias")
+            
+            if not items or not alias:
+                continue
+            
+            # 确定实体类型
+            entity_type = None
+            for et, prefixes in entity_types.items():
+                if any(group_id.startswith(prefix) for prefix in prefixes):
+                    entity_type = et
+                    break
+            
+            if not entity_type:
+                continue
+            
+            # 如果该实体类型已经提取到了，跳过（避免覆盖）
+            if entity_type in entities:
+                continue
+            
+            # 匹配文本中的词汇（按长度降序，确保长词优先匹配）
+            sorted_items = sorted(items, key=len, reverse=True)
+            for item in sorted_items:
+                if item in text:
+                    # entities中只保留中文原始文本（与正则匹配保持一致）
+                    entities[entity_type] = item
+                    break
+        
+        # 提取value（通常是数值、时间等，这里简化处理，可以根据需要扩展）
+        # 可以添加数值提取逻辑，例如使用正则表达式提取数字等
         
         return entities if entities else None
     

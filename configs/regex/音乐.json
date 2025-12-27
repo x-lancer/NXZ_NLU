@@ -26,7 +26,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{music_mode}}",
+      "pattern": "{{action_music_mode}}",
       "intent": "music",
       "action": "mode",
       "target": null,

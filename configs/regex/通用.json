@@ -3,7 +3,7 @@
   "description": "通用查询规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "{{query_action}}(?P<target>{{target_general_time}})",
+      "pattern": "{{action_query}}(?P<target>{{target_general_time}})",
       "intent": "general",
       "action": "query",
       "target": null,
@@ -25,7 +25,7 @@
       "confidence": 0.90
     },
     {
-      "pattern": "{{query_action}}(?P<target>{{target_general_query}})",
+      "pattern": "{{action_query}}(?P<target>{{target_general_query}})",
       "intent": "general",
       "action": "query",
       "target": null,

@@ -203,8 +203,7 @@ class NLUService:
                     return self._build_intent_data(
                         regex_result,
                         domain=regex_result.get("domain", "通用"),
-                        method="regex_global",
-                        raw_text=text
+                        method="regex_global"
                     )
             except Exception as e:
                 logger.error(f"Global regex task failed: {e}", exc_info=True)
@@ -238,8 +237,7 @@ class NLUService:
                     return self._build_intent_data(
                         regex_result,
                         domain=regex_result.get("domain", "通用"),
-                        method="regex_global",
-                        raw_text=text
+                        method="regex_global"
                     )
             
             if domain_task and domain_task.done():
@@ -330,8 +328,7 @@ class NLUService:
                     return self._build_intent_data(
                         regex_result,
                         domain=domain,
-                        method="regex_domain_specific",
-                        raw_text=text
+                        method="regex_domain_specific"
                     )
             except Exception as e:
                 logger.error(f"Domain regex task failed: {e}", exc_info=True)
@@ -356,8 +353,7 @@ class NLUService:
                     return self._build_intent_data(
                         model_result,
                         domain=domain,
-                        method="model",
-                        raw_text=text
+                        method="model"
                     )
             except Exception as e:
                 logger.error(f"Model prediction task failed: {e}", exc_info=True)
@@ -373,8 +369,7 @@ class NLUService:
                     return self._build_intent_data(
                         regex_result,
                         domain=domain,
-                        method="regex_domain_specific",
-                        raw_text=text
+                        method="regex_domain_specific"
                     )
             
             if model_task and model_task.done():
@@ -384,8 +379,7 @@ class NLUService:
                     return self._build_intent_data(
                         model_result,
                         domain=domain,
-                        method="model",
-                        raw_text=text
+                        method="model"
                     )
         
         # 默认返回未知意图
@@ -434,11 +428,17 @@ class NLUService:
         Returns:
             IntentData: 意图识别结果
         """
+        # 构建semantic对象（统一格式：所有方法都返回semantic对象）
+        semantic_data = None
+        semantic_dict = result.get("semantic")
+        if semantic_dict:
+            from app.core.schemas import SemanticData
+            semantic_data = SemanticData(**semantic_dict)
+        
         return IntentData(
             intent=result.get("intent", "unknown"),
             domain=result.get("domain") or domain or "通用",
-            action=result.get("action"),
-            target=result.get("target"),
+            semantic=semantic_data,
             confidence=result.get("confidence", 0.0),
             entities=result.get("entities"),
             raw_text=result.get("raw_text", ""),

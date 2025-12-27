@@ -19,7 +19,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{query_action}}(?P<target>{{target_system_query}})",
+      "pattern": "{{action_query}}(?P<target>{{target_system_query}})",
       "intent": "system",
       "action": "query",
       "target": null,
@@ -27,7 +27,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{target_system_control}}",
+      "pattern": "{{action_system_control}}",
       "intent": "system",
       "action": "control",
       "target": null,

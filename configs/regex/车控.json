@@ -3,20 +3,20 @@
   "description": "车辆控制相关规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "{{action_open}}(?P<target>(?:{{position_all}})?(?:{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}}))",
+      "pattern": "{{action_open}}(?P<position>(?:{{position_all}}|{{position_specific}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}})",
       "intent": "vehicle_control",
       "action": "open",
       "target": null,
       "confidence": 0.95,
-      "group_names": ["action", "target"]
+      "group_names": ["action", "position", "target"]
     },
     {
-      "pattern": "{{action_close}}(?P<target>(?:{{position_all}})?(?:{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}}))",
+      "pattern": "{{action_close}}(?P<position>(?:{{position_all}}|{{position_specific}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}})",
       "intent": "vehicle_control",
       "action": "close",
       "target": null,
       "confidence": 0.95,
-      "group_names": ["action", "target"]
+      "group_names": ["action", "position", "target"]
     },
     {
       "pattern": "{{action_adjust}}(?P<target>{{target_vehicle_adjust}})",
@@ -27,7 +27,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{query_action}}(?P<target>{{target_vehicle_query}})",
+      "pattern": "{{action_query}}(?P<target>{{target_vehicle_query}})",
       "intent": "vehicle_query",
       "action": "query",
       "target": null,

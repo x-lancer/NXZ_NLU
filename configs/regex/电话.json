@@ -26,7 +26,7 @@
       "confidence": 0.95
     },
     {
-      "pattern": "{{query_action}}(?P<target>{{target_phone_query}})",
+      "pattern": "{{action_query}}(?P<target>{{target_phone_query}})",
       "intent": "phone",
       "action": "query",
       "target": null,

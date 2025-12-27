@@ -1,32 +1,37 @@
 {
+  "description": "全局通用正则规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "(打开|开启|启动)(?P<target>车窗|车门|天窗|空调|音乐|导航)",
+      "pattern": "{{action_open}}(?P<position>(?:{{position_all}}|{{position_specific}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}})",
       "intent": "vehicle_control",
+      "domain": "车控",
       "action": "open",
       "target": null,
       "confidence": 0.95,
-      "group_names": ["action", "target"]
+      "group_names": ["action", "position", "target"]
     },
     {
-      "pattern": "(关闭|停止|关闭)(?P<target>车窗|车门|天窗|空调|音乐|导航)",
+      "pattern": "{{action_close}}(?P<position>(?:{{position_all}}|{{position_specific}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}})",
       "intent": "vehicle_control",
+      "domain": "车控",
       "action": "close",
       "target": null,
       "confidence": 0.95,
-      "group_names": ["action", "target"]
+      "group_names": ["action", "position", "target"]
     },
     {
-      "pattern": "(调高|调低|调整)(?P<target>音量|温度|亮度|风速)",
+      "pattern": "(?:{{action_adjust_up}}|{{action_adjust_down}}|{{action_adjust}})(?P<target>{{target_vehicle_adjust}})",
       "intent": "vehicle_control",
+      "domain": "车控",
       "action": "adjust",
       "target": null,
       "confidence": 0.90,
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "(查询|显示|查看)(?P<target>天气|路况|油量|电量|里程)",
+      "pattern": "{{action_query}}(?P<target>{{target_vehicle_query}}|{{target_general_time}}|{{target_general_query}})",
       "intent": "vehicle_query",
+      "domain": "通用",
       "action": "query",
       "target": null,
       "confidence": 0.90,

@@ -4,6 +4,45 @@
 
 本项目的版本遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [0.0.4] - 2025-12-27
+
+### 重大变更
+- **语义字段统一** - 将 `action`, `target`, `position`, `value` 字段统一包装到 `semantic` 对象中
+- **Alias 机制统一** - 正则匹配和模型推测统一使用 `vocabulary_groups.json` 的 alias 机制，确保输出格式一致
+
+### 新增
+- **SemanticData 模型** - 新增 `SemanticData` 类，统一语义字段结构
+- **Alias 字段支持** - 在 `vocabulary_groups.json` 中为每个词汇组添加 `alias` 字段，用于标准化输出
+- **执行耗时统计** - API 响应中添加 `elapsed_time` 字段，记录服务执行耗时
+- **Domain 字段支持** - 正则规则配置中添加 `domain` 字段，匹配时自动设置正确的领域
+
+### 变更
+- **响应格式重构**：
+  - `IntentData` 模型重构，语义字段统一到 `semantic` 对象中
+  - `entities` 字段只保留中文原始文本，移除英文 alias 和 `_text` 后缀字段
+- **正则服务优化**：
+  - `_extract_result()` 方法使用 alias 机制，将中文词汇映射为英文标识符
+  - 支持从规则配置中读取 `domain` 字段
+- **模型服务重构**：
+  - `_extract_entities()` 方法重构，使用 `vocabulary_groups.json` 的词汇组和 alias 机制
+  - 统一实体提取逻辑，支持提取 `action`, `target`, `position`, `value` 四个字段
+  - 移除对 `intent_mappings.json` 的依赖
+- **词汇组系统优化**：
+  - 删除 `aliases` 字段（简写引用功能），简化配置
+  - 优化 `item_to_alias` 映射逻辑，确保更具体的组优先
+- **API 响应增强**：
+  - 添加 `elapsed_time` 字段，记录服务执行耗时（秒）
+  - 改进错误处理，返回更详细的错误信息
+
+### 删除
+- **向后兼容代码** - 移除 `nlu_service.py` 中兼容旧格式的代码
+- **Aliases 字段** - 从 `vocabulary_groups.json` 中删除 `aliases` 字段
+
+### 技术细节
+- 统一使用 `VocabularyManager.get_alias_by_item()` 进行中文到英文的映射
+- `semantic` 对象使用英文 alias，`entities` 对象保留中文原始文本
+- 正则匹配和模型推测的语义字段结构完全一致
+
 ## [0.0.3] - 2025-12-27
 
 ### 重大变更

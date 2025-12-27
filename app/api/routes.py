@@ -1,6 +1,7 @@
 """
 API路由定义
 """
+import time
 from fastapi import APIRouter, HTTPException, Depends
 from app.core.schemas import (
     IntentRequest, IntentResponse, 
@@ -8,6 +9,9 @@ from app.core.schemas import (
 )
 from app.services.nlu_service import NLUService
 from app.api.dependencies import get_nlu_service
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(tags=["NLU"])
 
@@ -29,16 +33,21 @@ async def classify_domain(
     - **context**: 可选的上下文信息
     - **session_id**: 可选的会话ID
     """
+    start_time = time.time()
     try:
         result = await nlu_service.classify_domain(
             text=request.text,
             context=request.context
         )
+        elapsed_time = time.time() - start_time
         return DomainResponse(
             success=True,
-            data=result
+            data=result,
+            elapsed_time=round(elapsed_time, 4)
         )
     except Exception as e:
+        elapsed_time = time.time() - start_time
+        logger.error(f"Domain classification error: {str(e)} (elapsed: {elapsed_time:.4f}s)", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"领域划分失败: {str(e)}"
@@ -67,6 +76,7 @@ async def recognize_intent(
     1. 如果未提供 domain，先进行领域划分
     2. 在对应领域下进行意图识别
     """
+    start_time = time.time()
     try:
         result = await nlu_service.recognize(
             text=request.text,
@@ -74,13 +84,18 @@ async def recognize_intent(
             context=request.context,
             session_id=request.session_id
         )
+        elapsed_time = time.time() - start_time
         return IntentResponse(
             success=True,
-            data=result
+            data=result,
+            elapsed_time=round(elapsed_time, 4)
         )
     except Exception as e:
+        elapsed_time = time.time() - start_time
+        error_detail = f"意图识别失败: {str(e)}"
+        logger.error(f"Intent recognition error: {error_detail} (elapsed: {elapsed_time:.4f}s)", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"意图识别失败: {str(e)}"
+            detail=error_detail
         )
 

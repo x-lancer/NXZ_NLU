@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # 项目基本信息
     PROJECT_NAME: str = "NXZ NLU Service"
-    VERSION: str = "0.0.3"
+    VERSION: str = "0.0.4"
     API_V1_PREFIX: str = "/api/v1"
     
     # 服务器配置

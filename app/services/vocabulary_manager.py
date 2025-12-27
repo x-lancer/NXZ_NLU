@@ -17,7 +17,8 @@ class VocabularyManager:
     
     def __init__(self):
         self.groups: Dict[str, Dict[str, any]] = {}  # 词汇组定义
-        self.aliases: Dict[str, str] = {}  # 别名映射
+        self.group_aliases: Dict[str, str] = {}  # 组别名映射（group_id -> alias）
+        self.item_to_alias: Dict[str, str] = {}  # 词汇项到alias的反向映射（中文词汇 -> alias）
         self.compiled_patterns: Dict[str, str] = {}  # 编译后的正则模式缓存
         self._loaded = False
     
@@ -43,19 +44,29 @@ class VocabularyManager:
                 # 加载词汇组
                 groups = config.get("groups", {})
                 for group_id, group_data in groups.items():
+                    items = group_data.get("items", [])
+                    alias = group_data.get("alias", group_id)  # 如果没有alias，使用group_id
+                    
                     self.groups[group_id] = {
                         "name": group_data.get("name", group_id),
                         "description": group_data.get("description", ""),
-                        "items": group_data.get("items", [])
+                        "items": items,
+                        "alias": alias
                     }
-                
-                # 加载别名
-                self.aliases = config.get("aliases", {})
+                    
+                    # 存储组别名映射
+                    self.group_aliases[group_id] = alias
+                    
+                    # 建立词汇项到alias的反向映射
+                    # 如果item已存在，不覆盖（保留更具体的映射，因为先加载的通常是更具体的组）
+                    for item in items:
+                        if item not in self.item_to_alias:
+                            self.item_to_alias[item] = alias
                 
                 # 验证词汇组
                 self._validate_groups()
                 
-                logger.info(f"Loaded {len(self.groups)} vocabulary groups with {len(self.aliases)} aliases")
+                logger.info(f"Loaded {len(self.groups)} vocabulary groups")
                 logger.debug(f"Groups: {list(self.groups.keys())}")
                 
                 self._loaded = True
@@ -66,29 +77,50 @@ class VocabularyManager:
     
     def _validate_groups(self):
         """验证词汇组配置"""
-        # 检查别名引用的组是否存在
-        for alias, group_id in self.aliases.items():
-            if group_id not in self.groups:
-                logger.warning(f"Alias '{alias}' references non-existent group '{group_id}'")
+        # 可以在这里添加其他验证逻辑
+        pass
     
     def get_group(self, group_id: str) -> Optional[List[str]]:
         """
         获取词汇组的所有词汇
         
         Args:
-            group_id: 词汇组ID或别名
+            group_id: 词汇组ID
             
         Returns:
             词汇列表，如果组不存在返回None
         """
-        # 先检查别名
-        actual_id = self.aliases.get(group_id, group_id)
-        
-        if actual_id not in self.groups:
-            logger.warning(f"Vocabulary group '{group_id}' (resolved to '{actual_id}') not found")
+        if group_id not in self.groups:
+            logger.warning(f"Vocabulary group '{group_id}' not found")
             return None
         
-        return self.groups[actual_id]["items"].copy()
+        return self.groups[group_id]["items"].copy()
+    
+    def get_group_alias(self, group_id: str) -> Optional[str]:
+        """
+        获取词汇组的alias
+        
+        Args:
+            group_id: 词汇组ID
+            
+        Returns:
+            alias字符串，如果组不存在返回None
+        """
+        if group_id in self.group_aliases:
+            return self.group_aliases[group_id]
+        return None
+    
+    def get_alias_by_item(self, item: str) -> Optional[str]:
+        """
+        根据词汇项（中文）获取对应的alias
+        
+        Args:
+            item: 词汇项（如"车窗"）
+            
+        Returns:
+            alias字符串，如果找不到返回None
+        """
+        return self.item_to_alias.get(item)
     
     def get_group_pattern(self, group_id: str, escape: bool = True) -> Optional[str]:
         """

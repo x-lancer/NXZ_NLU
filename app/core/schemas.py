@@ -56,14 +56,22 @@ class DomainResponse(BaseModel):
     data: Optional[DomainData] = Field(None, description="领域划分结果数据")
     error: Optional[str] = Field(None, description="错误信息")
     timestamp: datetime = Field(default_factory=datetime.now, description="时间戳")
+    elapsed_time: Optional[float] = Field(None, description="服务执行耗时（秒）")
+
+
+class SemanticData(BaseModel):
+    """语义信息数据"""
+    action: Optional[str] = Field(None, description="动作")
+    target: Optional[str] = Field(None, description="操作目标")
+    position: Optional[str] = Field(None, description="方位（不一定有）")
+    value: Optional[str] = Field(None, description="值（不一定有）")
 
 
 class IntentData(BaseModel):
     """意图识别结果数据"""
     intent: str = Field(..., description="识别的意图")
     domain: Optional[str] = Field(None, description="所属领域")
-    action: Optional[str] = Field(None, description="动作")
-    target: Optional[str] = Field(None, description="目标对象")
+    semantic: Optional[SemanticData] = Field(None, description="语义信息（action、target、position、value）")
     confidence: float = Field(..., ge=0.0, le=1.0, description="置信度")
     entities: Optional[Dict[str, Any]] = Field(None, description="提取的实体信息")
     raw_text: str = Field(..., description="原始文本")
@@ -76,6 +84,7 @@ class IntentResponse(BaseModel):
     data: Optional[IntentData] = Field(None, description="识别结果数据")
     error: Optional[str] = Field(None, description="错误信息")
     timestamp: datetime = Field(default_factory=datetime.now, description="时间戳")
+    elapsed_time: Optional[float] = Field(None, description="服务执行耗时（秒）")
 
     class Config:
         json_schema_extra = {
@@ -83,8 +92,13 @@ class IntentResponse(BaseModel):
                 "success": True,
                 "data": {
                     "intent": "vehicle_control",
-                    "action": "open",
-                    "target": "window",
+                    "domain": "车控",
+                    "semantic": {
+                        "action": "open",
+                        "target": "window",
+                        "position": "driver",
+                        "value": None
+                    },
                     "confidence": 0.95,
                     "entities": {
                         "action": "打开",
@@ -94,7 +108,8 @@ class IntentResponse(BaseModel):
                     "method": "regex"
                 },
                 "error": None,
-                "timestamp": "2024-01-01T12:00:00Z"
+                "timestamp": "2024-01-01T12:00:00Z",
+                "elapsed_time": 0.0123
             }
         }
 

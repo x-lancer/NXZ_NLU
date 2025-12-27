@@ -87,6 +87,10 @@ class RegexService:
                         if patterns:
                             # 展开词汇组引用
                             expanded_patterns = self._expand_patterns(patterns)
+                            # 为每个规则添加文件级别的domain（如果规则本身没有domain字段）
+                            for pattern_config in expanded_patterns:
+                                if "domain" not in pattern_config:
+                                    pattern_config["domain"] = domain
                             self.domain_patterns[domain] = expanded_patterns
                             logger.debug(f"Loaded {len(expanded_patterns)} patterns for domain: {domain}")
                 except Exception as e:
@@ -142,7 +146,13 @@ class RegexService:
                 # 记录原始模式（用于调试）
                 if expanded_pattern != original_pattern:
                     expanded_config["_original_pattern"] = original_pattern
-                    logger.debug(f"Expanded pattern: {original_pattern} -> {expanded_pattern}")
+                    logger.debug(f"Expanded pattern: {original_pattern[:100]}... -> {expanded_pattern[:200]}...")
+                
+                # 验证展开后的正则表达式是否有效
+                try:
+                    re.compile(expanded_pattern)
+                except re.error as e:
+                    logger.error(f"Invalid expanded regex pattern: {expanded_pattern[:200]}... Error: {e}")
             
             expanded.append(expanded_config)
         
@@ -159,8 +169,8 @@ class RegexService:
         Args:
             text: 待匹配的文本
             domain: 可选的领域
-                - None: 全领域匹配（匹配所有领域的规则）
-                - 指定领域: 只匹配该领域的规则
+                - None: 全局正则匹配（只匹配通用规则，来自 regex_patterns.json）
+                - 指定领域: 只匹配该领域的规则（来自 configs/regex/{domain}.json）
         
         Returns:
             Dict包含intent, action, target, entities, domain等字段，如果未匹配返回None
@@ -169,40 +179,42 @@ class RegexService:
             logger.warning("Regex patterns not loaded, cannot match")
             return None
         
-        # 策略1: 全领域匹配（domain=None）
+        # 策略1: 全局正则匹配（domain=None）- 只匹配通用规则
         if domain is None:
-            # 先尝试通用规则
+            # 只匹配通用规则（不遍历领域规则）
             if self.common_patterns:
                 result = self._match_patterns(text, self.common_patterns)
                 if result:
-                    result["domain"] = "通用"  # 通用规则属于通用领域
-                    logger.debug(f"Matched common pattern")
+                    # 优先使用规则配置中的domain，如果没有则使用"通用"
+                    if not result.get("domain"):
+                        result["domain"] = "通用"
+                    logger.debug(f"Matched common pattern (global regex), domain={result.get('domain')}")
                     return result
             
-            # 遍历所有领域的规则
-            for domain_name, patterns in self.domain_patterns.items():
-                result = self._match_patterns(text, patterns)
-                if result:
-                    result["domain"] = domain_name  # 记录匹配到的领域
-                    logger.debug(f"Matched pattern in domain '{domain_name}' (global match)")
-                    return result
-            
+            # 全局正则只匹配通用规则，不匹配领域规则
             return None
         
         # 策略2: 指定领域匹配
         if domain in self.domain_patterns:
             result = self._match_patterns(text, self.domain_patterns[domain])
             if result:
-                result["domain"] = domain  # 记录领域
-                logger.debug(f"Matched pattern in domain '{domain}'")
+                # 优先使用规则配置中的domain，如果没有则使用传入的domain
+                if not result.get("domain"):
+                    result["domain"] = domain
+                semantic = result.get('semantic', {})
+                logger.info(f"Matched pattern in domain '{result.get('domain', domain)}': intent={result.get('intent')}, action={semantic.get('action') if isinstance(semantic, dict) else None}, target={semantic.get('target') if isinstance(semantic, dict) else None}")
                 return result
+            else:
+                logger.debug(f"No pattern matched in domain '{domain}' for text: {text}")
         
         # 如果指定领域匹配失败，尝试通用规则（兜底）
         if self.common_patterns:
             result = self._match_patterns(text, self.common_patterns)
             if result:
-                result["domain"] = "通用"
-                logger.debug(f"Matched common pattern (fallback)")
+                # 优先使用规则配置中的domain，如果没有则使用"通用"
+                if not result.get("domain"):
+                    result["domain"] = "通用"
+                logger.debug(f"Matched common pattern (fallback), domain={result.get('domain')}")
                 return result
         
         return None
@@ -232,10 +244,14 @@ class RegexService:
                 match = re.search(pattern, text)
                 if match:
                     result = self._extract_result(pattern_config, match, text)
-                    logger.debug(f"Regex matched: {pattern[:50]}... -> intent={result.get('intent')}")
+                    semantic = result.get('semantic', {})
+                    logger.info(f"Regex matched: pattern={pattern[:100]}..., text={text}, intent={result.get('intent')}, action={semantic.get('action') if isinstance(semantic, dict) else None}, target={semantic.get('target') if isinstance(semantic, dict) else None}")
                     return result
+                else:
+                    # 只在调试模式下记录未匹配的规则，避免日志过多
+                    logger.debug(f"Regex not matched: pattern={pattern[:100]}..., text={text}")
             except re.error as e:
-                logger.error(f"Invalid regex pattern '{pattern}': {e}")
+                logger.error(f"Invalid regex pattern '{pattern[:100]}...': {e}")
                 continue
         
         return None
@@ -255,12 +271,13 @@ class RegexService:
             text: 原始文本
         
         Returns:
-            包含intent, action, target, confidence, entities, raw_text等字段的字典
+            包含intent, action, target, position, value, confidence, entities, raw_text等字段的字典
         """
         # 获取基础配置
         intent = pattern_config.get("intent", "unknown")
-        action = pattern_config.get("action")
-        target = pattern_config.get("target")
+        action = pattern_config.get("action")  # 从配置中读取action（如"open"）
+        target = pattern_config.get("target")  # 从配置中读取target（通常是null，从正则中提取）
+        domain = pattern_config.get("domain")  # 从配置中读取domain（如果规则中有定义）
         confidence = pattern_config.get("confidence", 1.0)
         
         # 提取命名分组
@@ -268,24 +285,56 @@ class RegexService:
         if match.groupdict():
             entities = match.groupdict()
         
-        # 提取所有分组
+        # 提取所有分组（包括非命名分组）
         groups = match.groups()
         if groups:
             group_names = pattern_config.get("group_names", [])
             for i, group_value in enumerate(groups):
                 if group_value and i < len(group_names):
-                    entities[group_names[i]] = group_value
+                    # 只有当entities中没有该key时才添加（避免覆盖命名分组）
+                    if group_names[i] not in entities:
+                        entities[group_names[i]] = group_value
         
-        # 动态提取action和target（如果正则中有分组）
-        if not action and "action" in entities:
-            action = entities.get("action")
+        # 动态提取target、position、value（如果正则中有分组）
+        # action从配置中读取，不需要从entities中提取
         if not target and "target" in entities:
             target = entities.get("target")
+            # 将中文target映射为alias（如果vocab_manager可用）
+            if target and self.vocab_manager:
+                alias = self.vocab_manager.get_alias_by_item(target)
+                if alias:
+                    target = alias
+        
+        position = entities.get("position")  # 方位（可选）
+        # 将中文position映射为alias（如果vocab_manager可用）
+        if position and self.vocab_manager:
+            alias = self.vocab_manager.get_alias_by_item(position)
+            if alias:
+                position = alias
+        
+        value = entities.get("value")  # 值（可选）
+        # 将中文value映射为alias（如果vocab_manager可用）
+        if value and self.vocab_manager:
+            alias = self.vocab_manager.get_alias_by_item(value)
+            if alias:
+                value = alias
+        
+        logger.debug(f"Extracted result: intent={intent}, action={action}, target={target}, position={position}, entities={entities}")
+        
+        # 构建semantic对象（只有当至少有一个字段有值时才创建）
+        semantic = None
+        if action or target or position or value:
+            semantic = {
+                "action": action,
+                "target": target,
+                "position": position,
+                "value": value
+            }
         
         return {
             "intent": intent,
-            "action": action,
-            "target": target,
+            "domain": domain,  # 使用配置中的domain值（如果规则中有定义）
+            "semantic": semantic,
             "confidence": confidence,
             "entities": entities if entities else None,
             "raw_text": text  # 添加原始文本
