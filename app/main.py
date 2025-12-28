@@ -1,7 +1,10 @@
 """
 FastAPI应用主入口
 """
+import os
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes import router
@@ -40,6 +43,37 @@ async def startup_event():
     logger.info("Loading NLU models and services...")
     # 初始化NLU服务
     initialize_nlu_service()
+    logger.info("✅ NLU 服务初始化完成！")
+    
+    # 检查测试界面是否启用
+    enable_test_ui = os.getenv("ENABLE_TEST_UI", "false").lower() == "true"
+    if enable_test_ui:
+        # 如果绑定到 0.0.0.0，提示用户使用服务器的实际 IP 或域名
+        if settings.HOST == "0.0.0.0":
+            logger.info("=" * 70)
+            logger.info("🎉 API 测试界面已启用！")
+            logger.info(f"📝 本地访问: http://localhost:{settings.PORT}/test-ui")
+            logger.info(f"📝 服务器访问: http://<服务器IP或域名>:{settings.PORT}/test-ui")
+            logger.info(f"   提示：请将 <服务器IP或域名> 替换为实际的服务器的 IP 地址或域名")
+            logger.info("=" * 70)
+            # 同时打印到控制台（确保用户能看到）
+            print("\n" + "=" * 70)
+            print("🎉 API 测试界面已启用！")
+            print(f"📝 本地访问: http://localhost:{settings.PORT}/test-ui")
+            print(f"📝 服务器访问: http://<服务器IP或域名>:{settings.PORT}/test-ui")
+            print(f"   提示：请将 <服务器IP或域名> 替换为实际的服务器的 IP 地址或域名")
+            print("=" * 70 + "\n")
+        else:
+            test_ui_url = f"http://{settings.HOST}:{settings.PORT}/test-ui"
+            logger.info("=" * 70)
+            logger.info("🎉 API 测试界面已启用！")
+            logger.info(f"📝 访问地址: {test_ui_url}")
+            logger.info("=" * 70)
+            # 同时打印到控制台（确保用户能看到）
+            print("\n" + "=" * 70)
+            print("🎉 API 测试界面已启用！")
+            print(f"📝 访问地址: {test_ui_url}")
+            print("=" * 70 + "\n")
 
 
 @app.on_event("shutdown")
@@ -66,4 +100,20 @@ async def health_check():
         "status": "healthy",
         "service": settings.PROJECT_NAME
     }
+
+
+# 测试界面路由（默认启用，可通过环境变量禁用）
+@app.get("/test-ui")
+async def test_ui():
+    """API 测试界面 - 可视化 API 调试工具"""
+    static_dir = Path(__file__).parent / "static"
+    html_file = static_dir / "test-ui.html"
+    if html_file.exists():
+        return FileResponse(html_file, media_type="text/html")
+    else:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=500,
+            detail="测试界面文件未找到，请确保 app/static/test-ui.html 文件存在"
+        )
 

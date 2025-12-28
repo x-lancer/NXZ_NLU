@@ -40,8 +40,7 @@ env/
 logs/
 *.log
 
-# 模型文件
-model_files/
+# 模型文件（如果使用本地模型，请自行添加到 .gitignore）
 *.bin
 *.safetensors
 *.onnx

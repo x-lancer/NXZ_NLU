@@ -14,21 +14,107 @@
       "alias": "close",
       "items": ["关闭", "停止", "关", "关上", "关了"]
     },
-    "action_adjust": {
+    "action_open_half": {
+      "name": "半开动作",
+      "description": "表示半开的动作词汇",
+      "alias": "open_half",
+      "items": ["半开", "打开一半", "开一半", "启动一半", "开启一半", "开了一半"]
+    },
+    "action_close_half": {
+      "name": "半关动作",
+      "description": "表示半关的动作词汇",
+      "alias": "close_half",
+      "items": ["半关", "关闭一半", "关一半", "关了一半", "关上一点"]
+    },
+    "action_open_full": {
+      "name": "全开动作",
+      "description": "表示全开的动作词汇",
+      "alias": "open_full",
+      "items": ["全开", "完全打开", "全部打开", "全部开启", "完全开启", "开满"]
+    },
+    "action_close_full": {
+      "name": "全关动作",
+      "description": "表示全关的动作词汇",
+      "alias": "close_full",
+      "items": ["全关", "完全关闭", "全部关闭", "完全关上", "全部关上", "关满", "关完"]
+    },
+    "action_open_little": {
+      "name": "开一点动作",
+      "description": "表示开一点的动作词汇",
+      "alias": "open_little",
+      "items": ["开一点", "打开一点", "开一些", "打开一些", "稍微打开"]
+    },
+    "action_close_little": {
+      "name": "关一点动作",
+      "description": "表示关一点的动作词汇",
+      "alias": "close_little",
+      "items": ["关一点", "关闭一点", "关一些", "关闭一些", "稍微关闭"]
+    },
+    "action_adjust_to": {
       "name": "调整动作",
       "description": "表示调整、设置的动作词汇（通用）",
-      "alias": "adjust",
-      "items": ["调整", "设置", "调节"]
+      "alias": "adjust_to",
+      "items": ["调整", "设置", "调节", "调到", "调成", "调为", "设置到"]
     },
     "action_adjust_up": {
       "name": "调高动作",
       "description": "表示调高的动作词汇",
+      "alias": "adjust_up",
       "items": ["调高", "调大", "增大", "升高", "提高", "加高", "加大"]
     },
     "action_adjust_down": {
       "name": "调低动作",
       "description": "表示调低的动作词汇",
+      "alias": "adjust_down",
       "items": ["调低", "调小", "减小", "降低", "减低", "降低", "减少"]
+    },
+    "action_query": {
+      "name": "查询动作",
+      "description": "查询、查看相关的动作词汇",
+      "alias": "query",
+      "items": ["查询", "查看", "显示", "看看", "搜索"]
+    },
+    "action_navigate": {
+      "name": "导航动作",
+      "description": "导航相关的动作词汇",
+      "alias": "navi",
+      "items": ["导航", "去", "到", "前往", "去往", "导航到"]
+    },
+    "action_play": {
+      "name": "播放动作",
+      "description": "播放相关的动作词汇",
+      "alias": "play",
+      "items": ["播放", "放", "播", "播送"]
+    },
+    "action_call": {
+      "name": "拨打动作",
+      "description": "打电话相关的动作词汇",
+      "alias": "call",
+      "items": ["打", "拨打", "拨", "打电话"]
+    },
+    "action_call_prep": {
+      "name": "拨打介词",
+      "description": "拨打目标前的介词",
+      "alias": "call_prep",
+      "items": ["给", "到"]
+    },
+    "action_phone_answer": {
+      "name": "电话接听动作",
+      "description": "电话接听相关的动作",
+      "alias": "phone_answer",
+      "items": ["接听", "拒接"]
+    },
+    "action_phone_hangup": {
+      "name": "电话挂断动作",
+      "description": "电话挂断相关的动作",
+      "alias": "phone_hangup",
+      "items": ["挂断", "回拨", "重拨"]
+    },
+    "action_music_mode": {
+      "name": "音乐播放模式",
+      "description": "音乐播放模式相关动作词汇",
+      "alias": "music_mode",
+      "items": ["随机播放", "单曲循环", "列表循环", "顺序播放"]
     },
     "position_driver": {
       "name": "主驾驶位置",
@@ -48,15 +134,41 @@
       "alias": "rear",
       "items": ["后", "后排", "后座", "后面"]
     },
+    "position_front": {
+      "name": "前排位置",
+      "description": "前排相关的词汇",
+      "alias": "front",
+      "items": ["前排", "前座", "前面"]
+    },
+    "position_left": {
+      "name": "左排位置",
+      "description": "左排相关的词汇",
+      "alias": "left",
+      "items": ["左排", "左", "左侧"]
+    },
+    "position_right": {
+      "name": "右排位置",
+      "description": "右排相关的词汇",
+      "alias": "right",
+      "items": ["右排", "右", "右侧"]
+    },
+    "position_left_rear": {
+      "name": "左后位置",
+      "description": "左后相关的词汇",
+      "alias": "left_rear",
+      "items": ["左后", "左后排"]
+    },
+    "position_right_rear": {
+      "name": "右后位置",
+      "description": "右后相关的词汇",
+      "alias": "right_rear",
+      "items": ["右后", "右后排"]
+    },
     "position_all": {
       "name": "所有位置",
       "description": "表示所有、全部、全车的位置词汇",
+      "alias": "all",
       "items": ["所有", "全部", "全车"]
-    },
-    "position_specific": {
-      "name": "具体位置",
-      "description": "所有具体位置的词汇集合（包含主驾、副驾、后排）",
-      "items": ["主驾驶", "主驾", "主驾驶位置", "驾驶位", "副驾驶", "副驾", "副驾驶位置", "副驾驶座", "后", "后排", "后座", "后面", "左", "右", "前"]
     },
     "target_window": {
       "name": "车窗",
@@ -94,157 +206,161 @@
       "alias": "navigation",
       "items": ["导航", "GPS", "地图"]
     },
-    "target_all_vehicle": {
-      "name": "所有车辆控制目标",
-      "description": "车辆控制相关的所有目标词汇",
-      "items": ["车窗", "车窗玻璃", "窗户玻璃", "窗户", "车门", "门", "天窗", "顶窗", "空调", "冷气", "暖气", "音乐", "音响", "音频", "导航", "GPS", "地图", "后备箱", "大灯", "雨刷", "座椅"]
-    },
-    "action_query": {
-      "name": "查询动作",
-      "description": "查询、查看相关的动作词汇",
-      "alias": "query",
-      "items": ["查询", "查看", "显示", "看看", "搜索"]
-    },
-    "action_navigate": {
-      "name": "导航动作",
-      "description": "导航相关的动作词汇",
-      "items": ["导航", "去", "到", "前往", "去往"]
-    },
-    "action_navigate_prep": {
-      "name": "导航介词",
-      "description": "导航目标前的介词",
-      "items": ["到", "去", "去往", "前往"]
-    },
-    "action_play": {
-      "name": "播放动作",
-      "description": "播放相关的动作词汇",
-      "items": ["播放", "放", "播", "播送"]
-    },
-    "action_control_music": {
-      "name": "音乐控制动作",
-      "description": "音乐播放控制相关的动作",
-      "items": ["下一首", "上一首", "暂停", "继续", "停止", "播放"]
-    },
-    "action_control_nav": {
-      "name": "导航控制动作",
-      "description": "导航控制相关的动作",
-      "items": ["开始", "停止", "取消", "重新规划", "避开"]
-    },
-    "action_adjust_volume": {
-      "name": "音量调整动作",
-      "description": "音量调整相关的动作词汇",
-      "items": ["调大", "调小", "调高", "调低", "增大", "减小"]
-    },
-    "action_call": {
-      "name": "拨打动作",
-      "description": "打电话相关的动作词汇",
-      "items": ["打", "拨打", "拨", "打电话"]
-    },
-    "action_call_prep": {
-      "name": "拨打介词",
-      "description": "拨打目标前的介词",
-      "items": ["给", "到"]
-    },
-    "action_phone_control": {
-      "name": "电话控制动作",
-      "description": "电话控制相关的动作",
-      "items": ["接听", "挂断", "拒接", "回拨", "重拨"]
-    },
-    "action_toggle": {
-      "name": "开关动作",
-      "description": "开关相关的动作词汇",
-      "items": ["打开", "关闭", "开启", "关"]
-    },
-    "target_navigation_related": {
-      "name": "导航相关目标",
-      "description": "导航查询相关的目标",
-      "items": ["路线", "路况", "地图", "导航"]
-    },
-    "target_music_related": {
-      "name": "音乐相关目标",
-      "description": "音乐相关的目标词汇",
-      "items": ["歌", "音乐", "歌曲", "音频"]
-    },
     "target_volume": {
       "name": "音量",
       "description": "音量相关的词汇",
+      "alias": "volume",
       "items": ["音量", "声音", "声量"]
     },
-    "target_nav_avoid": {
-      "name": "导航避开目标",
-      "description": "导航中需要避开的项目",
-      "items": ["高速", "拥堵", "收费站", "红灯"]
+    "target_vehicle_adjust": {
+      "name": "车辆调整目标",
+      "description": "车辆调整相关的目标",
+      "alias": "vehicle_adjust",
+      "items": ["音量", "温度", "亮度", "风速", "座椅"]
     },
-    "target_phone_query": {
-      "name": "电话查询目标",
-      "description": "电话查询相关的目标",
-      "items": ["通话记录", "联系人", "未接来电", "来电"]
+    "target_vehicle_fuel": {
+      "name": "油量",
+      "description": "油量相关的词汇",
+      "alias": "fuel",
+      "items": ["油量", "汽油", "燃油"]
     },
-    "target_system_toggle": {
-      "name": "系统开关目标",
-      "description": "系统开关相关的目标",
-      "items": ["蓝牙", "WiFi", "GPS", "热点", "飞行模式", "网络"]
+    "target_vehicle_battery": {
+      "name": "电量",
+      "description": "电量相关的词汇",
+      "alias": "battery",
+      "items": ["电量", "电池"]
+    },
+    "target_vehicle_mileage": {
+      "name": "里程",
+      "description": "里程相关的词汇",
+      "alias": "mileage",
+      "items": ["里程", "公里数", "行驶里程"]
+    },
+    "target_vehicle_tire_pressure": {
+      "name": "胎压",
+      "description": "胎压相关的词汇",
+      "alias": "tire_pressure",
+      "items": ["胎压", "轮胎压力"]
+    },
+    "target_vehicle_temperature": {
+      "name": "温度",
+      "description": "温度相关的词汇",
+      "alias": "temperature",
+      "items": ["温度"]
+    },
+    "target_vehicle_trunk": {
+      "name": "后备箱",
+      "description": "后备箱相关的词汇",
+      "alias": "trunk",
+      "items": ["后备箱", "行李箱"]
+    },
+    "target_vehicle_headlight": {
+      "name": "大灯",
+      "description": "大灯相关的词汇",
+      "alias": "headlight",
+      "items": ["大灯", "前灯", "车灯"]
+    },
+    "target_vehicle_wiper": {
+      "name": "雨刷",
+      "description": "雨刷相关的词汇",
+      "alias": "wiper",
+      "items": ["雨刷", "雨刮器", "雨刮"]
+    },
+    "target_vehicle_seat": {
+      "name": "座椅",
+      "description": "座椅相关的词汇",
+      "alias": "seat",
+      "items": ["座椅", "座位", "座"]
+    },
+    "target_vehicle_seat_heating": {
+      "name": "座椅加热",
+      "description": "座椅加热相关的词汇",
+      "alias": "seat_heating",
+      "items": ["座椅加热", "座位加热"]
+    },
+    "target_vehicle_seat_ventilation": {
+      "name": "座椅通风",
+      "description": "座椅通风相关的词汇",
+      "alias": "seat_ventilation",
+      "items": ["座椅通风", "座位通风"]
+    },
+    "target_navigation_route": {
+      "name": "路线",
+      "description": "路线相关的词汇",
+      "alias": "route",
+      "items": ["路线", "路径", "道路"]
+    },
+    "target_navigation_traffic": {
+      "name": "路况",
+      "description": "路况相关的词汇",
+      "alias": "traffic",
+      "items": ["路况", "交通状况", "交通"]
+    },
+    "target_system_bluetooth": {
+      "name": "蓝牙",
+      "description": "蓝牙相关的词汇",
+      "alias": "bluetooth",
+      "items": ["蓝牙"]
+    },
+    "target_system_wifi": {
+      "name": "WiFi",
+      "description": "WiFi相关的词汇",
+      "alias": "wifi",
+      "items": ["WiFi", "WIFI", "无线网络", "wifi"]
+    },
+    "target_system_gps": {
+      "name": "GPS",
+      "description": "GPS相关的词汇",
+      "alias": "gps",
+      "items": ["GPS", "定位", "gps"]
+    },
+    "target_system_hotspot": {
+      "name": "热点",
+      "description": "热点相关的词汇",
+      "alias": "hotspot",
+      "items": ["热点", "移动热点", "个人热点"]
+    },
+    "target_system_airplane_mode": {
+      "name": "飞行模式",
+      "description": "飞行模式相关的词汇",
+      "alias": "airplane_mode",
+      "items": ["飞行模式", "航空模式"]
+    },
+    "target_system_network": {
+      "name": "网络",
+      "description": "网络相关的词汇",
+      "alias": "network",
+      "items": ["网络", "移动网络", "数据网络"]
     },
     "target_system_adjust": {
       "name": "系统调整目标",
       "description": "系统调整相关的目标",
+      "alias": "system_adjust",
       "items": ["屏幕亮度", "音量", "字体大小", "音量大小"]
     },
     "target_system_query": {
       "name": "系统查询目标",
       "description": "系统查询相关的目标",
+      "alias": "system_query",
       "items": ["系统版本", "存储空间", "电池电量", "内存", "存储", "电量"]
-    },
-    "action_system_control": {
-      "name": "系统控制动作",
-      "description": "系统控制相关的动作",
-      "items": ["恢复出厂设置", "重启", "关机", "开机"]
     },
     "target_general_time": {
       "name": "时间相关目标",
       "description": "时间查询相关的目标",
+      "alias": "general_time",
       "items": ["天气", "时间", "日期", "星期几", "今天", "明天", "周几"]
     },
     "target_general_query": {
       "name": "通用查询目标",
       "description": "通用查询相关的目标",
+      "alias": "general_query",
       "items": ["油价", "股票", "新闻", "天气"]
-    },
-    "target_vehicle_adjust": {
-      "name": "车辆调整目标",
-      "description": "车辆调整相关的目标",
-      "items": ["音量", "温度", "亮度", "风速", "座椅"]
-    },
-    "target_vehicle_query": {
-      "name": "车辆查询目标",
-      "description": "车辆查询相关的目标",
-      "items": ["油量", "电量", "里程", "胎压", "温度"]
-    },
-    "action_music_mode": {
-      "name": "音乐播放模式",
-      "description": "音乐播放模式相关动作词汇",
-      "items": ["随机播放", "单曲循环", "列表循环", "顺序播放"]
     },
     "time_indicator": {
       "name": "时间指示词",
       "description": "时间相关的指示词",
+      "alias": "time_indicator",
       "items": ["现在", "当前", "今天", "明天", "后天"]
-    },
-    "action_search": {
-      "name": "搜索动作",
-      "description": "搜索相关的动作词汇",
-      "items": ["搜索", "查找", "找", "搜"]
-    },
-    "action_nav_adjust": {
-      "name": "导航调整动作",
-      "description": "导航路线调整相关的动作",
-      "items": ["重新规划", "避开", "绕过"]
-    },
-    "target_vehicle_special": {
-      "name": "车辆特殊目标",
-      "description": "车辆特有的控制目标",
-      "items": ["后备箱", "大灯", "雨刷", "座", "座椅"]
     }
   }
 }
-

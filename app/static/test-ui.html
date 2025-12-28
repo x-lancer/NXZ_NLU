@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NXZ NLU API 测试界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 30px;
+            display: flex;
+            gap: 30px;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .left-panel {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .right-panel {
+                margin-top: 20px;
+            }
+            
+            .response-box {
+                min-height: 300px;
+            }
+        }
+        
+        .api-selector {
+            margin-bottom: 30px;
+        }
+        
+        .api-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .api-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .api-selector select:hover {
+            border-color: #667eea;
+        }
+        
+        .api-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .response-section {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .response-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .response-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            flex: 1;
+            min-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .response-box pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .response-box.success {
+            border-color: #4caf50;
+            background: #f1f8f4;
+        }
+        
+        .response-box.error {
+            border-color: #f44336;
+            background: #fff5f5;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box p {
+            margin: 0;
+            color: #1976d2;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 NXZ NLU API 测试界面</h1>
+            <p>自然语言理解服务 - API 调试工具</p>
+        </div>
+        
+        <div class="content">
+            <div class="left-panel">
+                <div class="info-box">
+                    <p>💡 选择 API 端点，填写请求参数，点击"发送请求"进行测试</p>
+                </div>
+                
+                <div class="api-selector">
+                    <label for="apiEndpoint">选择 API 端点：</label>
+                    <select id="apiEndpoint">
+                        <option value="/api/v1/nlu/domain">领域划分 (/api/v1/nlu/domain)</option>
+                        <option value="/api/v1/nlu/intent">意图识别 (/api/v1/nlu/intent)</option>
+                    </select>
+                </div>
+                
+                <form id="apiForm">
+                    <div class="form-group">
+                        <label for="text">文本内容 (text) *</label>
+                        <textarea id="text" placeholder='例如: "打开主驾车窗"' required></textarea>
+                        <small>必填：待识别的自然语言文本</small>
+                    </div>
+                    
+                    <div class="form-group" id="domainGroup" style="display: none;">
+                        <label for="domain">领域 (domain)</label>
+                        <input type="text" id="domain" placeholder='例如: "车控"'>
+                        <small>可选：如果提供则跳过领域划分，直接进行意图识别</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="context">上下文 (context)</label>
+                        <textarea id="context" placeholder='例如: {}'>{"}</textarea>
+                        <small>可选：JSON 格式的上下文信息</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sessionId">会话ID (session_id)</label>
+                        <input type="text" id="sessionId" placeholder='例如: "session_123"'>
+                        <small>可选：用于多轮对话的会话标识</small>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary" id="submitBtn">
+                            发送请求
+                        </button>
+                        <button type="button" class="btn-secondary" id="clearBtn">
+                            清空
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="right-panel">
+                <div class="response-section">
+                    <h3>响应结果：</h3>
+                    <div class="response-box" id="responseBox">
+                        <pre>等待请求...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const apiEndpoint = document.getElementById('apiEndpoint');
+        const apiForm = document.getElementById('apiForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const responseBox = document.getElementById('responseBox');
+        const domainGroup = document.getElementById('domainGroup');
+        const textInput = document.getElementById('text');
+        const domainInput = document.getElementById('domain');
+        const contextInput = document.getElementById('context');
+        const sessionIdInput = document.getElementById('sessionId');
+        
+        // 根据选择的 API 端点显示/隐藏字段
+        apiEndpoint.addEventListener('change', function() {
+            if (this.value === '/api/v1/nlu/intent') {
+                domainGroup.style.display = 'block';
+            } else {
+                domainGroup.style.display = 'none';
+                domainInput.value = '';
+            }
+        });
+        
+        // 表单提交
+        apiForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const endpoint = apiEndpoint.value;
+            const text = textInput.value.trim();
+            
+            if (!text) {
+                showError('请输入文本内容');
+                return;
+            }
+            
+            // 构建请求体
+            const requestBody = {
+                text: text
+            };
+            
+            // 解析 context
+            let context = {};
+            if (contextInput.value.trim()) {
+                try {
+                    context = JSON.parse(contextInput.value);
+                } catch (e) {
+                    showError('上下文格式错误，请输入有效的 JSON');
+                    return;
+                }
+            }
+            requestBody.context = context;
+            
+            // 添加 session_id
+            if (sessionIdInput.value.trim()) {
+                requestBody.session_id = sessionIdInput.value.trim();
+            }
+            
+            // 添加 domain（仅意图识别）
+            if (endpoint === '/api/v1/nlu/intent' && domainInput.value.trim()) {
+                requestBody.domain = domainInput.value.trim();
+            }
+            
+            // 发送请求
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span>请求中...';
+            responseBox.className = 'response-box';
+            responseBox.innerHTML = '<pre>请求中...</pre>';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess(data);
+                } else {
+                    showError(data);
+                }
+            } catch (error) {
+                showError({
+                    error: '请求失败',
+                    message: error.message,
+                    detail: '请检查服务是否正常运行'
+                });
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '发送请求';
+            }
+        });
+        
+        // 清空按钮
+        clearBtn.addEventListener('click', function() {
+            textInput.value = '';
+            domainInput.value = '';
+            contextInput.value = '{}';
+            sessionIdInput.value = '';
+            responseBox.className = 'response-box';
+            responseBox.innerHTML = '<pre>等待请求...</pre>';
+        });
+        
+        // 显示成功响应
+        function showSuccess(data) {
+            responseBox.className = 'response-box success';
+            responseBox.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+        
+        // 显示错误响应
+        function showError(data) {
+            responseBox.className = 'response-box error';
+            if (typeof data === 'string') {
+                responseBox.innerHTML = '<pre>' + JSON.stringify({ error: data }, null, 2) + '</pre>';
+            } else {
+                responseBox.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        }
+        
+        // 设置默认示例
+        textInput.value = '打开主驾车窗';
+        contextInput.value = '{}';
+    </script>
+</body>
+</html>
+

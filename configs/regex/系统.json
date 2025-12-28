@@ -3,7 +3,7 @@
   "description": "系统设置相关规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "{{action_toggle}}(?P<target>{{target_system_toggle}})",
+      "pattern": "{{action_toggle}}(?P<target>{{target_system_bluetooth}}|{{target_system_wifi}}|{{target_system_gps}}|{{target_system_hotspot}}|{{target_system_airplane_mode}}|{{target_system_network}})",
       "intent": "system",
       "action": "toggle",
       "target": null,
@@ -11,7 +11,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{action_adjust}}(?P<target>{{target_system_adjust}})",
+      "pattern": "{{action_adjust_to}}(?P<target>{{target_system_adjust}})",
       "intent": "system",
       "action": "adjust",
       "target": null,

@@ -12,6 +12,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from app.core.config import settings
 from app.utils.logger import get_logger
+from app.utils.helpers import build_semantic_dict, filter_none_values
 from app.services.vocabulary_manager import VocabularyManager
 
 logger = get_logger(__name__)
@@ -40,10 +41,9 @@ class ModelService:
             model_name = settings.MODEL_NAME or "paraphrase-multilingual-MiniLM-L12-v2"
             
             # 检查是否是本地路径
-            if os.path.exists(model_name) or os.path.exists(os.path.join(settings.MODEL_PATH, model_name)):
-                model_path = model_name if os.path.exists(model_name) else os.path.join(settings.MODEL_PATH, model_name)
-                logger.info(f"Loading model from local path: {model_path}")
-                self.model = SentenceTransformer(model_path, device=settings.MODEL_DEVICE)
+            if os.path.exists(model_name) or os.path.isabs(model_name):
+                logger.info(f"Loading model from local path: {model_name}")
+                self.model = SentenceTransformer(model_name, device=settings.MODEL_DEVICE)
             else:
                 logger.info(f"Loading model from HuggingFace: {model_name}")
                 self.model = SentenceTransformer(model_name, device=settings.MODEL_DEVICE)
@@ -267,20 +267,22 @@ class ModelService:
                 if position_text and self.vocab_manager:
                     position = self.vocab_manager.get_alias_by_item(position_text)
                 
-                # 只有当至少有一个字段有值时才创建semantic对象
-                if action or target or position or value:
-                    semantic = {
-                        "action": action,
-                        "target": target,
-                        "position": position,
-                        "value": value
-                    }
+                # 使用统一的工具函数构建semantic对象，自动过滤None值
+                semantic = build_semantic_dict(
+                    action=action,
+                    target=target,
+                    position=position,
+                    value=value
+                )
+            
+            # 过滤entities中的None值
+            filtered_entities = filter_none_values(entities)
             
             result = {
                 "intent": intent_name,
                 "semantic": semantic,
                 "confidence": float(confidence),
-                "entities": entities,
+                "entities": filtered_entities,
                 "raw_text": text,  # 添加原始文本
                 "similarities": {k: float(v) for k, v in similarities.items()}  # 用于调试
             }

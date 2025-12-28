@@ -2,7 +2,7 @@
   "description": "全局通用正则规则（使用可复用词汇组）",
   "patterns": [
     {
-      "pattern": "{{action_open}}(?P<position>(?:{{position_all}}|{{position_specific}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}})",
+      "pattern": "{{action_open}}(?P<position>(?:{{position_all}}|{{position_driver}}|{{position_passenger}}|{{position_rear}}|{{position_front}}|{{position_left}}|{{position_right}}|{{position_left_rear}}|{{position_right_rear}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_trunk}}|{{target_vehicle_headlight}}|{{target_vehicle_wiper}}|{{target_vehicle_seat}}|{{target_vehicle_seat_heating}}|{{target_vehicle_seat_ventilation}})",
       "intent": "vehicle_control",
       "domain": "车控",
       "action": "open",
@@ -11,7 +11,7 @@
       "group_names": ["action", "position", "target"]
     },
     {
-      "pattern": "{{action_close}}(?P<position>(?:{{position_all}}|{{position_specific}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_special}})",
+      "pattern": "{{action_close}}(?P<position>(?:{{position_all}}|{{position_driver}}|{{position_passenger}}|{{position_rear}}|{{position_front}}|{{position_left}}|{{position_right}}|{{position_left_rear}}|{{position_right_rear}}))?(?P<target>{{target_window}}|{{target_door}}|{{target_sunroof}}|{{target_ac}}|{{target_music}}|{{target_navigation}}|{{target_vehicle_trunk}}|{{target_vehicle_headlight}}|{{target_vehicle_wiper}}|{{target_vehicle_seat}}|{{target_vehicle_seat_heating}}|{{target_vehicle_seat_ventilation}})",
       "intent": "vehicle_control",
       "domain": "车控",
       "action": "close",
@@ -20,7 +20,7 @@
       "group_names": ["action", "position", "target"]
     },
     {
-      "pattern": "(?:{{action_adjust_up}}|{{action_adjust_down}}|{{action_adjust}})(?P<target>{{target_vehicle_adjust}})",
+      "pattern": "(?:{{action_adjust_up}}|{{action_adjust_down}}|{{action_adjust_to}})(?P<target>{{target_vehicle_adjust}})",
       "intent": "vehicle_control",
       "domain": "车控",
       "action": "adjust",
@@ -29,7 +29,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{action_query}}(?P<target>{{target_vehicle_query}}|{{target_general_time}}|{{target_general_query}})",
+      "pattern": "{{action_query}}(?P<target>{{target_vehicle_fuel}}|{{target_vehicle_battery}}|{{target_vehicle_mileage}}|{{target_vehicle_tire_pressure}}|{{target_vehicle_temperature}}|{{target_general_time}}|{{target_general_query}})",
       "intent": "vehicle_query",
       "domain": "通用",
       "action": "query",

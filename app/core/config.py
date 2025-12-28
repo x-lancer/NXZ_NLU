@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # 项目基本信息
     PROJECT_NAME: str = "NXZ NLU Service"
-    VERSION: str = "0.0.4"
+    VERSION: str = "0.0.5"
     API_V1_PREFIX: str = "/api/v1"
     
     # 服务器配置
@@ -27,13 +27,9 @@ class Settings(BaseSettings):
     )
     
     # 模型配置
-    MODEL_PATH: str = Field(
-        default="./model_files",
-        description="模型文件路径"
-    )
     MODEL_NAME: str = Field(
         default="paraphrase-multilingual-MiniLM-L12-v2",
-        description="模型名称（MiniLM模型名称或本地路径）"
+        description="模型名称（MiniLM模型名称或本地路径，支持 HuggingFace 模型名称或本地绝对路径）"
     )
     USE_GPU: bool = Field(
         default=False,

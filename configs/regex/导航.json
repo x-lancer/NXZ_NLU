@@ -19,7 +19,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{action_query}}(?P<target>{{target_navigation_related}})",
+      "pattern": "{{action_query}}(?P<target>{{target_navigation_route}}|{{target_navigation_traffic}})",
       "intent": "navigation",
       "action": "query",
       "target": null,

@@ -3,7 +3,7 @@ Pydantic数据模型定义
 定义API请求和响应的数据结构
 """
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
 
@@ -61,10 +61,20 @@ class DomainResponse(BaseModel):
 
 class SemanticData(BaseModel):
     """语义信息数据"""
+    model_config = ConfigDict(exclude_none=True)
+    
     action: Optional[str] = Field(None, description="动作")
     target: Optional[str] = Field(None, description="操作目标")
     position: Optional[str] = Field(None, description="方位（不一定有）")
     value: Optional[str] = Field(None, description="值（不一定有）")
+    
+    def model_dump(self, **kwargs) -> Dict[str, Any]:
+        """重写序列化方法，确保排除 None 值"""
+        # 确保 exclude_none=True 被应用
+        kwargs.setdefault('exclude_none', True)
+        data = super().model_dump(**kwargs)
+        # 再次过滤 None 值（双重保障）
+        return {k: v for k, v in data.items() if v is not None}
 
 
 class IntentData(BaseModel):
@@ -93,12 +103,11 @@ class IntentResponse(BaseModel):
                 "data": {
                     "intent": "vehicle_control",
                     "domain": "车控",
-                    "semantic": {
-                        "action": "open",
-                        "target": "window",
-                        "position": "driver",
-                        "value": None
-                    },
+                "semantic": {
+                    "action": "open",
+                    "target": "window",
+                    "position": "driver"
+                },
                     "confidence": 0.95,
                     "entities": {
                         "action": "打开",

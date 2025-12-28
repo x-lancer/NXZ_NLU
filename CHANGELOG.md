@@ -4,6 +4,39 @@
 
 本项目的版本遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [0.0.5] - 2025-12-28
+
+### 重大变更
+- **None 值过滤机制** - 重构语义字段处理逻辑，确保响应中不包含任何 `null` 值字段
+- **统一工具函数** - 创建统一的工具函数来处理 None 值过滤，提高代码可维护性
+
+### 新增
+- **工具函数模块** (`app/utils/helpers.py`):
+  - `filter_none_values()` - 统一的字典 None 值过滤函数
+  - `build_semantic_dict()` - 构建语义字典并自动过滤 None 值
+
+### 变更
+- **SemanticData 模型优化**:
+  - 重写 `model_dump()` 方法，确保序列化时排除 None 值
+  - 添加双重保障机制，在构建和序列化阶段都过滤 None 值
+- **RegexService 重构**:
+  - `_extract_result()` 方法使用 `build_semantic_dict()` 统一构建语义字典
+  - 使用 `filter_none_values()` 统一过滤 entities
+- **ModelService 重构**:
+  - `predict()` 方法使用 `build_semantic_dict()` 统一构建语义字典
+  - 使用 `filter_none_values()` 统一过滤 entities
+- **NLUService 优化**:
+  - `_build_intent_data()` 方法使用统一的工具函数过滤 None 值
+  - 简化代码逻辑，移除重复的过滤代码
+- **文档更新**:
+  - 更新 `README.md` 中的响应示例，移除 `value: null` 字段
+  - 添加说明：所有 None 值都会被自动过滤
+
+### 技术细节
+- 多层保障机制：在构建语义字典、创建 SemanticData 对象、序列化三个阶段都进行 None 值过滤
+- 统一处理逻辑：所有 None 值过滤都通过 `app/utils/helpers.py` 中的工具函数完成
+- 向后兼容：不影响现有功能，只是确保响应格式更加干净
+
 ## [0.0.4] - 2025-12-27
 
 ### 重大变更

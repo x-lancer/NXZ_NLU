@@ -10,6 +10,7 @@ from app.services.model_service import ModelService
 from app.services.domain_service import DomainService
 from app.services.regex_service import RegexService
 from app.utils.logger import get_logger
+from app.utils.helpers import filter_none_values
 
 logger = get_logger(__name__)
 
@@ -432,15 +433,21 @@ class NLUService:
         semantic_data = None
         semantic_dict = result.get("semantic")
         if semantic_dict:
-            from app.core.schemas import SemanticData
-            semantic_data = SemanticData(**semantic_dict)
+            # 使用统一的工具函数过滤None值
+            filtered_semantic_dict = filter_none_values(semantic_dict)
+            if filtered_semantic_dict:  # 只有当过滤后字典不为空时才创建对象
+                from app.core.schemas import SemanticData
+                semantic_data = SemanticData(**filtered_semantic_dict)
+        
+        # 过滤entities中的None值（使用统一的工具函数）
+        entities = filter_none_values(result.get("entities"))
         
         return IntentData(
             intent=result.get("intent", "unknown"),
             domain=result.get("domain") or domain or "通用",
             semantic=semantic_data,
             confidence=result.get("confidence", 0.0),
-            entities=result.get("entities"),
+            entities=entities,
             raw_text=result.get("raw_text", ""),
             method=method
         )

@@ -9,24 +9,38 @@ from typing import Optional, Dict, Any, List
 from pathlib import Path
 from app.core.config import settings
 from app.utils.logger import get_logger
+from app.utils.helpers import build_semantic_dict, filter_none_values
 from app.services.vocabulary_manager import VocabularyManager
 
 logger = get_logger(__name__)
 
 
+def _get_supported_domains() -> List[str]:
+    """
+    从配置文件读取支持的领域列表（用于正则服务）
+    
+    Returns:
+        领域名称列表，按配置文件中的顺序返回
+    """
+    config_path = Path(settings.DOMAIN_EXAMPLES_PATH)
+    
+    if not config_path.exists():
+        logger.warning(f"Domain examples file not found: {config_path}")
+        return []
+    
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            domain_examples = config.get("domain_examples", {})
+            # 返回所有定义的领域名称列表
+            return list(domain_examples.keys())
+    except Exception as e:
+        logger.error(f"Failed to load domain list from config: {e}", exc_info=True)
+        return []
+
+
 class RegexService:
     """正则匹配服务类"""
-    
-    # 支持的领域列表
-    SUPPORTED_DOMAINS = [
-        "车控",
-        "导航",
-        "音乐",
-        "电话",
-        "系统",
-        "通用",
-        "闲聊"
-    ]
     
     def __init__(self):
         self.domain_patterns: Dict[str, List[Dict[str, Any]]] = {}  # 按领域组织的规则
@@ -75,7 +89,8 @@ class RegexService:
             self._create_default_domain_configs(domain_dir)
             return
         
-        for domain in self.SUPPORTED_DOMAINS:
+        supported_domains = _get_supported_domains()
+        for domain in supported_domains:
             domain_file = domain_dir / f"{domain}.json"
             
             if domain_file.exists():
@@ -321,183 +336,65 @@ class RegexService:
         
         logger.debug(f"Extracted result: intent={intent}, action={action}, target={target}, position={position}, entities={entities}")
         
-        # 构建semantic对象（只有当至少有一个字段有值时才创建）
-        semantic = None
-        if action or target or position or value:
-            semantic = {
-                "action": action,
-                "target": target,
-                "position": position,
-                "value": value
-            }
+        # 构建semantic对象（使用统一的工具函数，自动过滤None值）
+        semantic = build_semantic_dict(
+            action=action,
+            target=target,
+            position=position,
+            value=value
+        )
+        
+        # 过滤entities中的None值
+        filtered_entities = filter_none_values(entities)
         
         return {
             "intent": intent,
             "domain": domain,  # 使用配置中的domain值（如果规则中有定义）
-            "semantic": semantic,
+            "semantic": semantic,  # 已经是过滤后的结果，可能为None
             "confidence": confidence,
-            "entities": entities if entities else None,
+            "entities": filtered_entities,  # 已经是过滤后的结果，可能为None
             "raw_text": text  # 添加原始文本
         }
     
     def _create_default_domain_configs(self, domain_dir: Path):
-        """创建默认的领域规则文件"""
+        """创建默认的领域规则文件（从配置文件读取领域列表）"""
         domain_dir.mkdir(parents=True, exist_ok=True)
         
-        # 车控领域
-        vehicle_control_config = {
-            "domain": "车控",
-            "description": "车辆控制相关规则",
-            "patterns": [
-                {
-                    "pattern": r"(打开|开启|启动)(?P<target>车窗|车门|天窗|空调|音乐|导航)",
-                    "intent": "vehicle_control",
-                    "action": "open",
-                    "target": None,
-                    "confidence": 0.95,
-                    "group_names": ["action", "target"]
-                },
-                {
-                    "pattern": r"(关闭|停止)(?P<target>车窗|车门|天窗|空调|音乐|导航)",
-                    "intent": "vehicle_control",
-                    "action": "close",
-                    "target": None,
-                    "confidence": 0.95,
-                    "group_names": ["action", "target"]
-                },
-                {
-                    "pattern": r"(调高|调低|调整)(?P<target>音量|温度|亮度|风速)",
-                    "intent": "vehicle_control",
-                    "action": "adjust",
-                    "target": None,
-                    "confidence": 0.90,
-                    "group_names": ["action", "target"]
-                }
-            ]
-        }
+        # 从配置文件读取领域列表和描述
+        supported_domains = _get_supported_domains()
+        if not supported_domains:
+            logger.warning("No domains found in config, cannot create default regex configs")
+            return
         
-        # 导航领域
-        navigation_config = {
-            "domain": "导航",
-            "description": "导航相关规则",
-            "patterns": [
-                {
-                    "pattern": r"导航(到|去)(?P<target>.+)",
-                    "intent": "navigation",
-                    "action": "navigate",
-                    "target": None,
-                    "confidence": 0.95,
-                    "group_names": ["action", "target"]
-                },
-                {
-                    "pattern": r"(查看|显示)(?P<target>路线|路况|地图)",
-                    "intent": "navigation",
-                    "action": "query",
-                    "target": None,
-                    "confidence": 0.90,
-                    "group_names": ["action", "target"]
-                }
-            ]
-        }
+        # 读取领域描述
+        config_path = Path(settings.DOMAIN_EXAMPLES_PATH)
+        domain_descriptions = {}
+        try:
+            if config_path.exists():
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    domain_examples = config.get("domain_examples", {})
+                    for domain, domain_data in domain_examples.items():
+                        domain_descriptions[domain] = domain_data.get("description", f"{domain}相关规则")
+        except Exception as e:
+            logger.warning(f"Failed to read domain descriptions: {e}")
         
-        # 音乐领域
-        music_config = {
-            "domain": "音乐",
-            "description": "音乐播放相关规则",
-            "patterns": [
-                {
-                    "pattern": r"(播放|放)(?P<target>.+)(的)?(歌|音乐)",
-                    "intent": "music",
-                    "action": "play",
-                    "target": None,
-                    "confidence": 0.90,
-                    "group_names": ["action", "target"]
-                },
-                {
-                    "pattern": r"(下一首|上一首|暂停|继续|停止)",
-                    "intent": "music",
-                    "action": "control",
-                    "target": None,
-                    "confidence": 0.95
-                }
-            ]
-        }
-        
-        # 电话领域
-        phone_config = {
-            "domain": "电话",
-            "description": "电话相关规则",
-            "patterns": [
-                {
-                    "pattern": r"打(电话)?(给|到)(?P<target>.+)",
-                    "intent": "phone",
-                    "action": "call",
-                    "target": None,
-                    "confidence": 0.95,
-                    "group_names": ["action", "target"]
-                },
-                {
-                    "pattern": r"(接听|挂断|拒接)(电话)?",
-                    "intent": "phone",
-                    "action": "control",
-                    "target": None,
-                    "confidence": 0.95
-                }
-            ]
-        }
-        
-        # 系统领域
-        system_config = {
-            "domain": "系统",
-            "description": "系统设置相关规则",
-            "patterns": [
-                {
-                    "pattern": r"(打开|关闭)(?P<target>蓝牙|WiFi|GPS|热点)",
-                    "intent": "system",
-                    "action": "toggle",
-                    "target": None,
-                    "confidence": 0.90,
-                    "group_names": ["action", "target"]
-                }
-            ]
-        }
-        
-        # 通用领域
-        general_config = {
-            "domain": "通用",
-            "description": "通用查询规则",
-            "patterns": [
-                {
-                    "pattern": r"(查询|查看|显示)(?P<target>天气|时间|日期)",
-                    "intent": "general",
-                    "action": "query",
-                    "target": None,
-                    "confidence": 0.85,
-                    "group_names": ["action", "target"]
-                }
-            ]
-        }
-        
-        # 闲聊领域（通常不需要正则规则，但保留占位）
-        chat_config = {
-            "domain": "闲聊",
-            "description": "闲聊对话规则",
-            "patterns": []
-        }
-        
-        # 写入文件
-        domain_configs = {
-            "车控": vehicle_control_config,
-            "导航": navigation_config,
-            "音乐": music_config,
-            "电话": phone_config,
-            "系统": system_config,
-            "通用": general_config,
-            "闲聊": chat_config
-        }
-        
-        for domain, config in domain_configs.items():
+        # 为每个领域创建默认配置文件
+        for domain in supported_domains:
             domain_file = domain_dir / f"{domain}.json"
+            
+            # 如果文件已存在，跳过
+            if domain_file.exists():
+                logger.debug(f"Regex config file already exists for domain '{domain}', skipping")
+                continue
+            
+            # 创建默认配置（空的patterns数组）
+            default_config = {
+                "domain": domain,
+                "description": domain_descriptions.get(domain, f"{domain}相关规则"),
+                "patterns": []
+            }
+            
             with open(domain_file, 'w', encoding='utf-8') as f:
-                json.dump(config, f, ensure_ascii=False, indent=2)
+                json.dump(default_config, f, ensure_ascii=False, indent=2)
             logger.info(f"Created default regex config for domain '{domain}' at {domain_file}")

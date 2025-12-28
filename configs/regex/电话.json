@@ -19,7 +19,7 @@
       "group_names": ["action", "target"]
     },
     {
-      "pattern": "{{action_phone_control}}(电话)?",
+      "pattern": "(?:{{action_phone_answer}}|{{action_phone_hangup}})(电话)?",
       "intent": "phone",
       "action": "control",
       "target": null,

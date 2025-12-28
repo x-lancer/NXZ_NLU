@@ -15,19 +15,32 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def get_supported_domains() -> List[str]:
+    """
+    从配置文件读取支持的领域列表
+    
+    Returns:
+        领域名称列表，按配置文件中的顺序返回
+    """
+    config_path = Path(settings.DOMAIN_EXAMPLES_PATH)
+    
+    if not config_path.exists():
+        logger.warning(f"Domain examples file not found: {config_path}")
+        return []
+    
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            domain_examples = config.get("domain_examples", {})
+            # 返回所有定义的领域名称列表
+            return list(domain_examples.keys())
+    except Exception as e:
+        logger.error(f"Failed to load domain list from config: {e}", exc_info=True)
+        return []
+
+
 class DomainService:
     """领域划分服务类"""
-    
-    # 支持的领域列表
-    DOMAINS = [
-        "车控",
-        "导航",
-        "音乐",
-        "电话",
-        "系统",
-        "通用",
-        "闲聊"
-    ]
     
     def __init__(self):
         self.model: Optional[SentenceTransformer] = None
@@ -48,10 +61,9 @@ class DomainService:
             model_name = settings.MODEL_NAME or "paraphrase-multilingual-MiniLM-L12-v2"
             
             # 检查是否是本地路径
-            if os.path.exists(model_name) or os.path.exists(os.path.join(settings.MODEL_PATH, model_name)):
-                model_path = model_name if os.path.exists(model_name) else os.path.join(settings.MODEL_PATH, model_name)
-                logger.info(f"Loading domain model from local path: {model_path}")
-                self.model = SentenceTransformer(model_path, device=settings.MODEL_DEVICE)
+            if os.path.exists(model_name) or os.path.isabs(model_name):
+                logger.info(f"Loading domain model from local path: {model_name}")
+                self.model = SentenceTransformer(model_name, device=settings.MODEL_DEVICE)
             else:
                 logger.info(f"Loading domain model from HuggingFace: {model_name}")
                 self.model = SentenceTransformer(model_name, device=settings.MODEL_DEVICE)
@@ -344,7 +356,7 @@ class DomainService:
             "device": settings.MODEL_DEVICE,
             "domain_count": len(self.domain_examples),
             "total_examples": sum(len(examples) for examples in self.domain_examples.values()),
-            "supported_domains": self.DOMAINS,
+            "supported_domains": list(self.domain_examples.keys()),
             "cache_size": {
                 "embeddings": len(self._embedding_cache),
                 "predictions": len(self._prediction_cache)

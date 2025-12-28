@@ -1,10 +1,4 @@
 # NXZ NLU Service
-
-**逆行者语义识别服务** - 自然语言理解服务，用于意图识别和标准化数据返回。
-
-> **NXZ** = **逆行者**（Ni Xing Zhe）  
-> **NLU** = Natural Language Understanding（自然语言理解）
-
 NXZ NLU 是一个高性能的自然语言理解服务，专注于语义识别和意图解析，为智能交互系统提供准确、快速的意图识别能力。
 
 ## 功能特性
@@ -55,7 +49,6 @@ NXZ_NLU/
 │   ├── domain_examples.json    # 领域示例配置
 │   ├── intent_examples.json    # 意图示例配置
 │   └── ...
-├── model_files/                # 模型文件存储（不上传git）
 ├── tests/                      # 测试目录
 └── logs/                       # 日志目录
 ```
@@ -106,8 +99,8 @@ cp .env.example .env
 
 2. **使用本地模型**：
    ```bash
-   # 将模型下载到 model_files 目录，然后在 .env 中设置
-   MODEL_NAME=./model_files/your-model-name
+   # 在 .env 中设置本地模型的绝对路径
+   MODEL_NAME=/path/to/your/local/model
    ```
 
 3. **配置意图示例**：
@@ -152,7 +145,9 @@ curl -X POST "http://localhost:8000/api/v1/nlu/domain" \
     "raw_text": "打开车窗",
     "method": "model"
   },
-  "timestamp": "2024-01-01T12:00:00Z"
+  "error": null,
+  "timestamp": "2024-01-01T12:00:00Z",
+  "elapsed_time": 0.0234
 }
 ```
 
@@ -175,17 +170,24 @@ curl -X POST "http://localhost:8000/api/v1/nlu/intent" \
   "data": {
     "intent": "vehicle_control",
     "domain": "车控",
-    "action": "open",
-    "target": "window",
+    "semantic": {
+      "action": "open",
+      "target": "window",
+      "position": "driver"
+      // value字段仅在存在时出现
+    },
     "confidence": 0.95,
     "entities": {
       "action": "打开",
-      "target": "车窗"
+      "target": "车窗",
+      "position": "主驾"
     },
-    "raw_text": "打开车窗",
-    "method": "model"
+    "raw_text": "打开主驾车窗",
+    "method": "regex_global"
   },
-  "timestamp": "2024-01-01T12:00:00Z"
+  "error": null,
+  "timestamp": "2024-01-01T12:00:00Z",
+  "elapsed_time": 0.0123
 }
 ```
 
@@ -204,14 +206,72 @@ curl -X POST "http://localhost:8000/api/v1/nlu/intent" \
      }'
 ```
 
+## 响应体结构说明
+
+### 领域划分响应（DomainResponse）
+
+```json
+{
+  "success": true,              // 请求是否成功
+  "data": {
+    "domain": "车控",           // 识别的领域
+    "confidence": 0.92,         // 置信度（0-1）
+    "raw_text": "打开车窗",     // 原始文本
+    "method": "model"           // 识别方法：model
+  },
+  "error": null,                // 错误信息（成功时为 null）
+  "timestamp": "2024-01-01T12:00:00Z",  // 时间戳
+  "elapsed_time": 0.0234       // 服务执行耗时（秒）
+}
+```
+
+### 意图识别响应（IntentResponse）
+
+```json
+{
+  "success": true,              // 请求是否成功
+  "data": {
+    "intent": "vehicle_control", // 识别的意图
+    "domain": "车控",            // 所属领域
+    "semantic": {                // 语义信息（统一使用英文别名，不包含None值）
+      "action": "open",          // 动作（如：open, close, query）
+      "target": "window",         // 操作目标（如：window, door, ac）
+      "position": "driver"       // 方位（如：driver, passenger, rear，可选）
+      // value字段仅在存在时出现（如：温度值、音量值）
+    },
+    "confidence": 0.95,          // 置信度（0-1）
+    "entities": {                // 提取的实体信息（原始中文文本）
+      "action": "打开",
+      "target": "车窗",
+      "position": "主驾"
+    },
+    "raw_text": "打开主驾车窗",  // 原始文本
+    "method": "regex_global"     // 识别方法：regex_global/regex_domain/model
+  },
+  "error": null,                // 错误信息（成功时为 null）
+  "timestamp": "2024-01-01T12:00:00Z",  // 时间戳
+  "elapsed_time": 0.0123        // 服务执行耗时（秒）
+}
+```
+
+**字段说明：**
+
+- **`semantic`**: 语义信息对象，包含 `action`、`target`、`position`、`value` 四个可选字段，统一使用英文别名（如 `open`、`window`、`driver`），便于下游系统处理。**注意：所有 None 值都会被自动过滤，不会出现在响应中**
+- **`entities`**: 实体信息字典，包含从原始文本中提取的实体，使用原始中文文本（如 `"打开"`、`"车窗"`），便于调试和展示
+- **`method`**: 识别方法，可能的值：
+  - `regex_global`: 全局正则匹配
+  - `regex_domain`: 领域正则匹配
+  - `model`: 模型预测
+  - `none`: 未识别
+- **`elapsed_time`**: 服务执行耗时（秒），用于性能监控
+
 ## 配置说明
 
 ### 环境变量
 
 主要配置项说明：
 
-- `MODEL_PATH`: 模型文件存储路径（默认：`./model_files`）
-- `MODEL_NAME`: 模型名称（默认：`paraphrase-multilingual-MiniLM-L12-v2`）
+- `MODEL_NAME`: 模型名称或本地路径（默认：`paraphrase-multilingual-MiniLM-L12-v2`，支持 HuggingFace 模型名称或本地绝对路径）
 - `MODEL_DEVICE`: 模型运行设备，`cpu` 或 `cuda`（默认：`cpu`）
 - `USE_GPU`: 是否使用GPU（默认：`False`）
 - `CONFIDENCE_THRESHOLD`: 置信度阈值（默认：`0.5`，正则和模型统一使用）
@@ -413,8 +473,8 @@ black app/
 ### 添加新模型
 
 1. 在 `app/services/model_service.py` 中实现模型加载和推理逻辑
-2. 在 `.env` 中配置模型路径和名称
-3. 确保模型输出格式符合 `IntentData` 结构
+2. 在 `.env` 中配置模型名称（支持 HuggingFace 模型名称或本地绝对路径）
+3. 确保模型输出格式符合 `IntentData` 结构，特别是 `semantic` 对象格式
 
 ## 部署
 
