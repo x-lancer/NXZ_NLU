@@ -1,0 +1,15 @@
+如果您在启动时遇到 "WinError 1114" 或 "DLL load failed" 错误：
+
+这是因为 Windows Server 缺少必要的 C++ 运行库。
+
+【解决方法】
+
+1. 请下载并安装 "Microsoft Visual C++ Redistributable"：
+   下载地址: https://aka.ms/vs/17/release/vc_redist.x64.exe
+
+2. 下载后，双击 `vc_redist.x64.exe` 进行安装。
+
+3. 安装完成后，**必须重启服务器** (或者重新打开命令行窗口)。
+
+4. 再次运行 `start_server.bat` 即可。
+
